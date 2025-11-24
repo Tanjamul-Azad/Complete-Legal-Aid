@@ -1,0 +1,7 @@
+{
+  "name": "Complete Legal Aid (CLA)",
+  "description": "An AI-integrated Legal & Judicial Communication Platform that connects citizens, lawyers, and legal authorities. It features verified lawyer search, AI legal guidance, secure evidence vault, real-time case tracking, consultation booking, and 24/7 emergency legal support.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

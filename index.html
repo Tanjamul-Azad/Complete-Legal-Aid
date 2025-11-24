@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complete Legal Aid (CLA)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      /* Brand Colors */
+      --cla-gold: #F59E0B;
+      --cla-gold-dark: #D97706;
+
+      /* Light Theme Surfaces - SaaS Standard */
+      --cla-bg: #FFFFFF;
+      /* Main Content */
+      --cla-surface: #FFFFFF;
+      /* Cards */
+      --cla-header-bg: rgba(255, 255, 255, 0.95);
+      --cla-sidebar-bg: #F7F7F9;
+      /* Distinct Sidebar */
+      --cla-footer-bg: #020617;
+      /* Always Dark Footer */
+      --cla-border: #E5E7EB;
+
+      /* AI Button Light */
+      --ai-btn-bg: rgba(255, 255, 255, 0.9);
+      --ai-btn-border: #F59E0B;
+      --ai-btn-text: #0F172A;
+      --ai-btn-hover-bg: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      --ai-btn-hover-text: #FFFFFF;
+    }
+
+    html.dark {
+      /* Dark Theme Surfaces - SaaS Standard */
+      --cla-bg: #020617;
+      /* Deep Black/Blue Body */
+      --cla-surface: #050816;
+      /* Dark Cards */
+      --cla-header-bg: rgba(5, 8, 22, 0.95);
+      /* Deep Dark Header */
+      --cla-sidebar-bg: #070B13;
+      /* Slightly Lighter Sidebar */
+      --cla-footer-bg: #000000;
+      --cla-border: #1F2937;
+      /* Slate-800 equivalent */
+
+      /* AI Button Dark */
+      --ai-btn-bg: rgba(30, 30, 35, 0.6);
+      --ai-btn-text: #FFFFFF;
+      --ai-btn-hover-bg: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+    }
+
+    /* --- FLUID RESPONSIVE SCALING --- */
+    /* Default (Large Desktops) */
+    html {
+      font-size: 16px;
+    }
+
+    /* 13-inch Laptops & Standard Desktops (1280px - 1440px) */
+    /* This ensures UI elements aren't too big on your laptop */
+    @media (max-width: 1440px) {
+      html {
+        font-size: 14px;
+      }
+    }
+
+    /* Tablets (768px - 1024px) */
+    @media (max-width: 1024px) {
+      html {
+        font-size: 13px;
+      }
+    }
+
+    /* Mobile Devices (< 768px) */
+    @media (max-width: 768px) {
+      html {
+        font-size: 12px;
+      }
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(245, 158, 11, 0.6);
+    }
+
+    /* Animations */
+    @keyframes aiGlow {
+      0% {
+        box-shadow: 0 0 0px rgba(245, 158, 11, 0);
+      }
+
+      50% {
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+      }
+
+      100% {
+        box-shadow: 0 0 0px rgba(245, 158, 11, 0);
+      }
+    }
+
+    /* AI Assistant Button */
+    .ai-assistant-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+
+      background: var(--ai-btn-bg);
+      color: var(--ai-btn-text);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+
+      border: 2px solid var(--ai-btn-border);
+      border-radius: 9999px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .ai-assistant-btn:hover {
+      background: var(--ai-btn-hover-bg);
+      color: var(--ai-btn-hover-text);
+      transform: translateY(-4px) scale(1.02);
+      border-color: transparent;
+      box-shadow: 0 12px 40px rgba(245, 158, 11, 0.4);
+    }
+
+    .ai-assistant-btn.glow {
+      animation: aiGlow 3s infinite;
+    }
+
+    /* Golden Hover Card Effect */
+    .card-gold-hover {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card-gold-hover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(250, 204, 21, 0.15), transparent 60%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease-out;
+    }
+
+    .card-gold-hover:hover::before {
+      opacity: 1;
+    }
+
+    /* Shimmer Effect for Steps */
+    .step-shine {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .step-shine::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg,
+          transparent 0%,
+          rgba(245, 158, 11, 0.15) 40%,
+          transparent 80%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease-out;
+    }
+
+    .step-shine:hover::after {
+      transform: translateX(100%);
+    }
+
+    /* Utility for Leaflet Dark Mode */
+    .dark .leaflet-layer,
+    .dark .leaflet-control-zoom-in,
+    .dark .leaflet-control-zoom-out,
+    .dark .leaflet-control-attribution {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            'cla-gold': '#F59E0B',
+            'cla-gold-dark': '#D97706',
+            'cla-gold-darker': '#B45309',
+
+            // Extended Brand Palette
+            'brand': {
+              DEFAULT: '#F59E0B',
+              soft: '#FEF3C7',
+              strong: '#EA580C',
+            },
+            'justiceFrom': '#FBBF24',
+            'justiceTo': '#EA580C',
+
+            // Semantic Colors
+            'cla-bg': 'var(--cla-bg)',
+            'cla-surface': 'var(--cla-surface)',
+            'cla-header-bg': 'var(--cla-header-bg)',
+            'cla-sidebar-bg': 'var(--cla-sidebar-bg)',
+            'cla-footer-bg': 'var(--cla-footer-bg)',
+            'cla-border': 'var(--cla-border)',
+
+            // Compat
+            'cla-bg-dark': '#020617',
+            'cla-surface-dark': '#050816',
+            'cla-border-dark': '#1F2937',
+            'cla-text': '#1F2937',
+            'cla-text-dark': '#F9FAFB',
+            'cla-text-muted': '#6B7280',
+            'cla-text-muted-dark': '#9CA3AF',
+          },
+          boxShadow: {
+            'cla-card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            'cla-card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            'gold-soft': '0 0 0 1px rgba(234, 179, 8, 0.35), 0 18px 40px rgba(234, 179, 8, 0.25)',
+            'gold-soft-sm': '0 0 0 1px rgba(234, 179, 8, 0.3), 0 10px 24px rgba(234, 179, 8, 0.2)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'slide-in-right': 'slideInRight 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'slow-zoom': 'slowZoom 20s linear infinite alternate',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            scaleIn: {
+              '0%': { opacity: '0', transform: 'scale(.95)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            },
+            slideInRight: {
+              '0%': { transform: 'translateX(100%)' },
+              '100%': { transform: 'translateX(0)' },
+            },
+            slowZoom: {
+              '0%': { transform: 'scale(1)' },
+              '100%': { transform: 'scale(1.1)' },
+            }
+          },
+        },
+      },
+    }
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="bg-cla-bg text-cla-text dark:text-cla-text-dark font-sans transition-colors duration-300">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
