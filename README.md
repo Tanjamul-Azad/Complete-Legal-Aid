@@ -84,35 +84,23 @@ This system bridges **citizens → lawyers → NGOs → admins** into one truste
 
 ---
 
-# 🗂️ **Folder Structure (High-Level)**
+# 🗂️ **Folder Structure**
 
 ```bash
-complete-legal-aid/
-├── frontend/
-│   ├── components/
-│   ├── pages/
-│   ├── hooks/
-│   ├── context/
-│   ├── services/
-│   ├── utils/
-│   └── App.tsx
-│
-├── backend/
-│   ├── cla_api/
-│   ├── evidence_vault/
-│   ├── ai_assistant/
-│   ├── booking/
-│   ├── case_management/
-│   └── manage.py
-│
-├── docs/
-│   ├── SRS.pdf
-│   ├── FeasibilitySlides.pdf
-│   ├── Features.pdf
-│   └── UML Diagrams/
-│
-└── README.md
-
+Complete-Legal-Aid/
+├── components/           # UI Components (Modals, Dashboard, etc.)
+├── context/              # React Context (Global State)
+├── hooks/                # Custom Hooks (useAppLogic, etc.)
+├── services/             # API & Mock Services
+│   ├── mock/             # Mock Database & Data
+│   └── ...
+├── legal/                # Legal Content (Privacy, Terms)
+├── utils/                # Utility Functions
+├── App.tsx               # Main Application Component
+├── constants.ts          # App Constants
+├── types.ts              # TypeScript Definitions
+├── index.html            # Entry HTML
+└── vite.config.ts        # Vite Configuration
 ```
 ## 🤖 AI Legal Assistant
 
