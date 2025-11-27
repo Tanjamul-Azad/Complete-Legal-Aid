@@ -40,7 +40,7 @@ This system bridges **citizens → lawyers → NGOs → admins** into one truste
 
 | Layer | Tools Used |
 |------|------------|
-| **Frontend** | React, TypeScript, Vanilla JS, HTML, CSS |
+| **Frontend** | React, Vite, TypeScript, Vanilla JS, HTML, CSS |
 | **Backend** | Django, Django REST Framework |
 | **Database** | MySQL, Cloud SQL / Cloud MySQL Manager |
 | **AI / NLP** | Python Services, Gemini/OpenAI API |
@@ -179,17 +179,43 @@ Helps citizens understand the law in **simple Bangla**:
 
 ## ▶️ Getting Started (Local Development)
 
-### **1️⃣ Clone Repo**
+Follow these steps to set up and run the project locally.
 
+### **1️⃣ Prerequisites**
+- Node.js (v16 or higher)
+- npm or yarn
+
+### **2️⃣ Clone the Repository**
 ```bash
 git clone https://github.com/Tanjamul-Azad/Complete-Legal-Aid.git
 cd Complete-Legal-Aid
+```
 
+### **3️⃣ Install Dependencies**
+```bash
 npm install
 # or
 yarn install
+```
 
+### **4️⃣ Configure Environment Variables**
+The application requires an API key for the AI features.
+1. Create a `.env` file in the root directory.
+2. Copy the contents of `.env.example` into `.env`.
+3. Add your Gemini API key:
+```env
+VITE_GEMINI_API_KEY=your_api_key_here
+```
+
+### **5️⃣ Run Development Server**
+```bash
 npm run dev
+```
+The application will start at `http://localhost:5173` (or the port shown in your terminal).
 
-Visit:
-👉 http://localhost:5173/
+### **6️⃣ Build for Production**
+To create an optimized production build:
+```bash
+npm run build
+```
+The output will be in the `dist` directory.
