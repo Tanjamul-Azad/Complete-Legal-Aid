@@ -1,11 +1,13 @@
 
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import type { Page } from './types';
 import { AppContext, AppProvider } from './context/AppContext';
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { HomePage } from './components/pages/HomePage';
 import { AboutPage } from './components/pages/AboutPage';
 import { ContactPage } from './components/pages/ContactPage';
+import { CareersPage } from './components/pages/CareersPage';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { AuthPage } from './components/pages/AuthPage';
 import { PendingVerificationPage } from './components/pages/PendingVerificationPage';
@@ -19,114 +21,14 @@ import { EmergencyHelpModal } from './components/EmergencyHelpModal';
 import { EmergencyReportModal } from './components/EmergencyReportModal';
 import { ComplaintModal } from './components/ComplaintModal';
 import { ReviewModal } from './components/dashboard/ReviewModal';
-import { ScaleIcon, CloseIcon, SparklesIcon } from './components/icons';
+import { SparklesIcon } from './components/icons';
 import { Toast } from './components/ui/Toast';
-
-// --- Simulation Modals ---
-
-const SimulatedGoogleAuthModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    onLogin: (email: string) => void;
-    users: any[];
-}> = ({ isOpen, onClose, onLogin, users }) => {
-    if (!isOpen) return null;
-    const simUsers = users.filter(u => u.role !== 'admin').slice(0, 2);
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[101]">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
-                <div className="p-4 border-b text-center">
-                    <h2 className="text-xl font-medium text-gray-800">Choose an account</h2>
-                    <p className="text-sm text-gray-600">to continue to Complete Legal Aid</p>
-                </div>
-                <div className="p-2">
-                    <ul className="divide-y">
-                        {simUsers.map(user => (
-                            <li key={user.id}>
-                                <button onClick={() => { onLogin(user.email); onClose(); }} className="w-full text-left flex items-center space-x-4 p-3 hover:bg-gray-100 rounded-lg">
-                                    <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
-                                    <div>
-                                        <p className="font-medium text-gray-900">{user.name}</p>
-                                        <p className="text-sm text-gray-500">{user.email}</p>
-                                    </div>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <div className="p-4 border-t">
-                    <button onClick={onClose} className="text-sm font-medium text-blue-600 hover:bg-gray-100 p-2 rounded-md w-full">
-                        Use another account
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const SimulatedGmailInbox: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    emails: any[];
-    onReadEmail: (id: string) => void;
-    setCurrentPage: (page: Page) => void;
-    onVerifyClick: (token: string) => void;
-}> = ({ isOpen, onClose, emails, onReadEmail, setCurrentPage, onVerifyClick }) => {
-    if (!isOpen) return null;
-
-    const handleActionClick = (email: any) => {
-        onReadEmail(email.id);
-        if (email.action?.type === 'RESET_PASSWORD') {
-            setCurrentPage('reset-password');
-        } else if (email.action?.type === 'VERIFY_EMAIL') {
-            onVerifyClick(email.action.token);
-        }
-        onClose();
-    };
+import { SimulatedGoogleAuthModal } from './components/modals/SimulatedGoogleAuthModal';
+import { SimulatedGmailInbox } from './components/modals/SimulatedGmailInbox';
 
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[101] animate-fade-in p-4">
-            <div className="bg-cla-bg dark:bg-cla-surface-dark rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-                <header className="p-4 border-b border-cla-border dark:border-cla-border-dark flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-cla-text dark:text-cla-text-dark">Simulated Inbox</h2>
-                    <button onClick={onClose} className="text-cla-text-muted dark:text-cla-text-muted-dark hover:text-cla-text dark:hover:text-cla-text-dark">
-                        <CloseIcon />
-                    </button>
-                </header>
-                <div className="flex-1 overflow-y-auto">
-                    {emails.length === 0 ? (
-                        <p className="p-6 text-center text-cla-text-muted dark:text-cla-text-muted-dark">Your inbox is empty.</p>
-                    ) : (
-                        <ul>
-                            {emails.slice().reverse().map(email => (
-                                <li key={email.id} className={`p-4 border-b border-cla-border dark:border-cla-border-dark ${!email.read ? 'bg-cla-gold/10' : ''}`}>
-                                    <p className="font-bold text-cla-text dark:text-cla-text-dark">{email.from}</p>
-                                    <p className="font-medium text-cla-text dark:text-cla-text-dark">{email.subject}</p>
-                                    <div className="mt-2 text-sm text-cla-text-muted dark:text-cla-text-muted-dark" dangerouslySetInnerHTML={{ __html: email.body }} />
-                                    {email.action && (
-                                        <button onClick={() => handleActionClick(email)} className="mt-2 text-sm text-blue-500 hover:underline">
-                                            {email.action.buttonText}
-                                        </button>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
 
-
-import { Footer } from './components/Footer';
-
-
-import { CareersPage } from './components/pages/CareersPage';
-
-const PageRenderer: React.FC = () => {
+const PageRenderer = () => {
     const context = useContext(AppContext);
     if (!context) return null;
 
@@ -171,7 +73,7 @@ const PageRenderer: React.FC = () => {
     }
 };
 
-const AppContent: React.FC = () => {
+const AppContent = () => {
     const context = useContext(AppContext);
     if (!context) return null;
 
@@ -266,7 +168,7 @@ const AppContent: React.FC = () => {
 };
 
 
-const App: React.FC = () => (
+const App = () => (
     <AppProvider>
         <AppContent />
     </AppProvider>

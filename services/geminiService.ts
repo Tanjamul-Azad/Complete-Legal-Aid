@@ -12,7 +12,7 @@ const getAiClient = () => {
       throw new Error("API key is not configured. Please contact support.");
     }
     ai = new GoogleGenAI({ apiKey: API_KEY });
-    console.log("Gemini Client Initialized. Key length:", API_KEY.length);
+
   }
   return ai;
 };
