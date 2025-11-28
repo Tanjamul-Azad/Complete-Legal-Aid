@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import type { User, DashboardSubPage } from '../../types';
 import { AppContext } from '../../context/AppContext';
-import { SearchIcon, MessageIcon, BellIcon, WarningIcon } from '../icons';
+import { SearchIcon, MessageIcon, BellIcon, WarningIcon, MenuIcon } from '../icons';
 import { ThemeToggle } from '../ThemeToggle';
 import { ProfileDropdown } from '../ProfileDropdown';
 
@@ -10,7 +10,8 @@ export const DashboardHeader: React.FC<{
     unreadNotificationsCount: number;
     openInbox: () => void;
     openNotifications: () => void;
-}> = ({ unreadMessagesCount, unreadNotificationsCount, openInbox, openNotifications }) => {
+    onMenuClick: () => void;
+}> = ({ unreadMessagesCount, unreadNotificationsCount, openInbox, openNotifications, onMenuClick }) => {
     const context = useContext(AppContext);
 
     if (!context) return null;
@@ -33,6 +34,13 @@ export const DashboardHeader: React.FC<{
 
                 {/* LEFT SIDE: Search Bar (Logo removed) */}
                 <div className="flex items-center flex-1 max-w-xl">
+                    <button
+                        onClick={onMenuClick}
+                        className="md:hidden p-2 -ml-2 mr-2 text-cla-text-muted dark:text-cla-text-muted-dark hover:bg-cla-bg dark:hover:bg-cla-bg-dark rounded-md focus:outline-none focus:ring-2 focus:ring-cla-gold"
+                        aria-label="Open sidebar"
+                    >
+                        <MenuIcon className="w-6 h-6" />
+                    </button>
                     <div className="relative w-full">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <SearchIcon className="h-4 w-4 text-cla-text-muted dark:text-cla-text-muted-dark" />

@@ -3,7 +3,7 @@ import type { UserRole, DashboardSubPage } from '../../types';
 import { AppContext } from '../../context/AppContext';
 import {
     DashboardIcon, VaultIcon, SettingsIcon, VerificationIcon, SearchIcon,
-    BellIcon, RobotIcon, CalendarIcon, LogoutIcon, BriefcaseIcon, MessageIcon, UserGroupIcon, BanknotesIcon, WarningIcon, ServerIcon
+    BellIcon, RobotIcon, CalendarIcon, LogoutIcon, BriefcaseIcon, MessageIcon, UserGroupIcon, BanknotesIcon, WarningIcon, ServerIcon, MenuIcon
 } from '../icons';
 import { Breadcrumb, BreadcrumbItem } from '../ui/Breadcrumb';
 import { DashboardHeader } from './DashboardHeader';
@@ -55,6 +55,7 @@ interface NavItem {
 
 export const DashboardPage: React.FC = () => {
     const context = useContext(AppContext);
+    const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     if (!context) return null;
 
@@ -202,9 +203,21 @@ export const DashboardPage: React.FC = () => {
 
 
     return (
-        <div className="flex h-full bg-cla-bg dark:bg-cla-bg-dark text-cla-text dark:text-cla-text-dark overflow-hidden">
+        <div className="flex h-full bg-cla-bg dark:bg-cla-bg-dark text-cla-text dark:text-cla-text-dark overflow-hidden relative">
+            {/* Mobile Sidebar Overlay */}
+            {isMobileSidebarOpen && (
+                <div
+                    className="fixed inset-0 z-30 bg-black/50 md:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => setMobileSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 flex-shrink-0 bg-cla-sidebar-bg dark:bg-cla-sidebar-bg hidden md:flex flex-col border-r border-cla-border dark:border-cla-border-dark transition-all duration-300">
+            <aside className={`
+                fixed inset-y-0 left-0 z-40 w-64 flex-col border-r border-cla-border dark:border-cla-border-dark transition-transform duration-300 ease-in-out bg-cla-sidebar-bg dark:bg-cla-sidebar-bg
+                md:static md:flex md:translate-x-0
+                ${isMobileSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full hidden md:flex'}
+            `}>
                 <div className="flex items-center justify-center py-6 border-b border-cla-border dark:border-cla-border-dark">
                     <button
                         onClick={() => handleSetCurrentPage('home')}
@@ -235,6 +248,8 @@ export const DashboardPage: React.FC = () => {
                                 } else {
                                     setDashboardSubPage(item.id as DashboardSubPage);
                                 }
+                                // Close sidebar on mobile when item clicked
+                                setMobileSidebarOpen(false);
                             }}
                             className={`group flex items-center space-x-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 font-medium relative text-sm 
                                 ${subPage === item.id
@@ -262,6 +277,7 @@ export const DashboardPage: React.FC = () => {
                     unreadNotificationsCount={unreadNotificationsCount}
                     openInbox={openInbox}
                     openNotifications={openNotifications}
+                    onMenuClick={() => setMobileSidebarOpen(true)}
                 />
                 <main className="flex-1 overflow-y-auto custom-scrollbar">
                     {/* FIXED: This container limits width to prevent 'scattered' look on big screens */}
