@@ -136,9 +136,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 conn = pymysql.connect(
-    host=os.getenv("DB_HOST", "localhost"),
-    user=os.getenv("DB_USER", "root"),
-    password=os.getenv("DB_PASSWORD", "12345678")
+    host=os.getenv('DB_HOST', 'localhost'),
+    user=os.getenv('DB_USER', 'root'),
+    password=os.getenv('DB_PASSWORD', '12345678')
 )
 print("OK")
 "@
@@ -278,8 +278,8 @@ if (-not $BackendOnly) {
 }
 
 Write-Color "Admin Credentials:" Yellow
-Write-Color "Email:    ahbab.md@gmail.com" Yellow
-Write-Color "Password: ahbab2018" Yellow
+Write-Color "Email:    admin@cla.bd" Yellow
+Write-Color "Password: admin123" Yellow
 
 Write-Color "Servers running in this terminal." Blue
 Write-Color "Press Ctrl+C to stop the servers." Blue

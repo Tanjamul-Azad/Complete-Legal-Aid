@@ -410,8 +410,8 @@ main() {
     fi
     echo ""
     print_message "$YELLOW" "Credentials:"
-    print_message "$YELLOW" "  Email:    ahbab.md@gmail.com"
-    print_message "$YELLOW" "  Password: ahbab2018"
+    print_message "$YELLOW" "  Email:    admin@cla.bd"
+    print_message "$YELLOW" "  Password: admin123"
     echo ""
     print_message "$BLUE" "Press Ctrl+C to stop all servers"
     echo ""

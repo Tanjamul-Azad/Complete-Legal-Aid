@@ -8,8 +8,8 @@ django.setup()
 from api.models import User
 
 # Check if admin user exists
-email = 'ahbab.md@gmail.com'
-password = 'ahbab2018'
+email = 'admin@cla.bd'
+password = 'admin123'
 
 try:
     admin = User.objects.filter(email=email).first()
@@ -22,7 +22,6 @@ try:
         print(f"  Is active: {admin.is_active}")
         print(f"  Password valid: {admin.check_password(password)}")
         print(f"\n  Trying alternate password...")
-        print(f"  Password 'Ahbab2018' valid: {admin.check_password('Ahbab2018')}")
         print(f"  Password 'admin123' valid: {admin.check_password('admin123')}")
     else:
         print(f"✗ No user found with email: {email}")

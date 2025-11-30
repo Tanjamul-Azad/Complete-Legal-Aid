@@ -5,7 +5,7 @@
 **For fastest setup, use the automated script:**
 
 ```bash
-cd /Users/ahbab/Downloads/Software
+cd /path/to/your/project
 ./run_local.sh
 ```
 
@@ -101,7 +101,7 @@ Press `Ctrl+C` to stop all servers.
 ### Step 1: Navigate to Backend Directory
 
 ```bash
-cd /Users/ahbab/Downloads/Software/Backend
+cd /path/to/your/project/Backend
 ```
 
 ### Step 2: Create Python Virtual Environment
@@ -231,9 +231,9 @@ python manage.py createsuperuser
 ```
 
 Enter:
-- Email: `ahbab.md@gmail.com`
+- Email: `admin@cla.bd`
 - Phone: `01700000000`
-- Password: `ahbab2018`
+- Password: `admin123`
 
 ### Step 8: Start Backend Server
 
@@ -254,7 +254,7 @@ python manage.py runserver
 ### Step 1: Navigate to Frontend Directory
 
 ```bash
-cd /Users/ahbab/Downloads/Software/Frontend
+cd /path/to/your/project/Frontend
 ```
 
 ### Step 2: Install Node Dependencies
@@ -314,7 +314,7 @@ You need **TWO terminal windows** running simultaneously:
 ### Terminal 1: Backend Server
 
 ```bash
-cd /Users/ahbab/Downloads/Software/Backend
+cd /path/to/your/project/Backend
 source venv/bin/activate
 python manage.py runserver
 ```
@@ -324,7 +324,7 @@ Keep this running at: **http://localhost:8000**
 ### Terminal 2: Frontend Server
 
 ```bash
-cd /Users/ahbab/Downloads/Software/Frontend
+cd /path/to/your/project/Frontend
 npm run dev
 ```
 
@@ -342,8 +342,8 @@ Open your browser and navigate to: **http://localhost:3000**
 
 1. Click "Login" or "Admin Login"
 2. Enter credentials:
-   - **Email:** `ahbab.md@gmail.com`
-   - **Password:** `ahbab2018`
+   - **Email:** `admin@cla.bd`
+   - **Password:** `admin123`
 3. You should be redirected to the Admin Dashboard
 
 ### 3. Test User Registration
@@ -380,8 +380,8 @@ curl -X POST http://localhost:8000/api/auth/register/ \
 curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "ahbab.md@gmail.com",
-    "password": "ahbab2018"
+    "email": "admin@cla.bd",
+    "password": "admin123"
   }'
 ```
 
@@ -962,8 +962,8 @@ Response: 200 OK
 Access at: **http://localhost:8000/admin/**
 
 Login with superuser credentials:
-- Email: `ahbab.md@gmail.com`
-- Password: `ahbab2018`
+- Email: `admin@cla.bd`
+- Password: `admin123`
 
 From admin panel you can:
 - Manage users, cases, appointments
@@ -1092,8 +1092,8 @@ Update settings for your needs:
 ### Credentials
 
 **Superuser (Admin):**
-- Email: `ahbab.md@gmail.com`
-- Password: `ahbab2018`
+- Email: `admin@cla.bd`
+- Password: `admin123`
 - Role: Admin
 
 **Database:**
@@ -1140,8 +1140,8 @@ Your Complete Legal Aid platform is now ready for development and testing.
 The system includes sample users with Bengali names for testing purposes. Use these credentials to test different user roles:
 
 ### Admin Account
-- **Email:** ahbab.md@gmail.com
-- **Password:** ahbab2018
+- **Email:** admin@cla.bd
+- **Password:** admin123
 - **Role:** Admin (Superuser)
 
 ---
