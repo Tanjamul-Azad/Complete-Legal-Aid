@@ -113,15 +113,15 @@ export const CitizenSettings: React.FC = () => {
                 setToast({ message: "Image size must be less than 2MB", type: 'error' });
                 return;
             }
-            
+
             // Validate file type
             if (!file.type.startsWith('image/')) {
                 setToast({ message: "Please select a valid image file", type: 'error' });
                 return;
             }
-            
+
             setAvatarFile(file);
-            
+
             // Create preview URL
             const previewUrl = URL.createObjectURL(file);
             setAvatarPreview(previewUrl);
@@ -134,7 +134,7 @@ export const CitizenSettings: React.FC = () => {
         setIsProfileSaving(true);
         try {
             let avatarData = user.avatar;
-            
+
             // Convert file to base64 if a new file was selected
             if (avatarFile && avatarFile.size > 0) {
                 avatarData = await new Promise<string>((resolve, reject) => {
@@ -147,7 +147,7 @@ export const CitizenSettings: React.FC = () => {
                 // User clicked remove or set to default
                 avatarData = avatarPreview;
             }
-            
+
             await handleUpdateProfile(user.id, { ...profileData, avatar: avatarData });
             setAvatarFile(null);
             setToast({ message: "Profile updated successfully!", type: 'success' });
