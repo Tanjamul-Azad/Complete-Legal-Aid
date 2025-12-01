@@ -44,6 +44,8 @@ export const LawyerSettings: React.FC = () => {
         location: '',
     });
     const [isProfileSaving, setIsProfileSaving] = useState(false);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
     const [scheduleData, setScheduleData] = useState<{ [day: string]: { active: boolean; start: string; end: string } }>({
         'Monday': { active: true, start: '09:00', end: '17:00' },
@@ -133,6 +135,7 @@ export const LawyerSettings: React.FC = () => {
                 specializations: profileData.specializations.split(',').map(s => s.trim()).filter(Boolean),
                 experience: Number(profileData.experience),
                 fees: Number(profileData.fees),
+                avatarFile: avatarFile || undefined
             });
             setToast({ message: "Profile updated successfully!", type: 'success' });
         } catch (error) {
@@ -245,6 +248,25 @@ export const LawyerSettings: React.FC = () => {
         <form onSubmit={handleProfileSubmit}>
             <SectionCard title="Public Profile" description="This information will be visible to potential clients on the platform.">
                 <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-6">
+                        <img src={avatarPreview || user.avatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
+                        <div className="flex gap-2">
+                            <label htmlFor="lawyer-avatar-upload" className="cursor-pointer px-4 py-2 text-sm font-semibold bg-cla-gold text-cla-text rounded-lg hover:bg-cla-gold-darker transition-colors">Change Photo</label>
+                            <input
+                                id="lawyer-avatar-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setAvatarFile(file);
+                                        setAvatarPreview(URL.createObjectURL(file));
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
                     <FormInput id="name" name="name" label="Full Name" value={profileData.name} onChange={(e) => setProfileData(p => ({ ...p, name: e.target.value }))} />
                     <FormInput id="location" name="location" label="Location (e.g., Dhaka)" value={profileData.location} onChange={(e) => setProfileData(p => ({ ...p, location: e.target.value }))} />
                     <div>
