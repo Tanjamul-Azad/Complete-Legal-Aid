@@ -96,6 +96,7 @@ class LawyerProfileSerializer(serializers.ModelSerializer):
     specializations = serializers.SerializerMethodField()
     experience_years = serializers.SerializerMethodField()
     location = serializers.CharField(source='chamber_address', read_only=True)
+    availability = serializers.SerializerMethodField()
 
     class Meta:
         model = LawyerProfile
@@ -105,11 +106,12 @@ class LawyerProfileSerializer(serializers.ModelSerializer):
             'chamber_address', 'location', 'consultation_fee_online',
             'consultation_fee_offline', 'rating_average', 'total_reviews',
             'license_issue_date', 'profile_photo_url', 'verification_document_url',
-            'identity_document_url', 'specializations', 'experience_years'
+            'identity_document_url', 'specializations', 'experience_years',
+            'availability'
         ]
         read_only_fields = (
             'profile_id', 'user_id', 'name', 'email', 'phone', 'avatar', 'location',
-            'specializations', 'experience_years', 'bar_council_number'
+            'specializations', 'experience_years', 'bar_council_number', 'availability'
         )
 
     def get_avatar(self, obj):
@@ -131,6 +133,57 @@ class LawyerProfileSerializer(serializers.ModelSerializer):
                 delta -= 1
             return max(delta, 0)
         return None
+
+    def get_availability(self, obj):
+        """
+        Generate availability slots for the next 30 days based on weekly schedule.
+        Returns a dict: { 'YYYY-MM-DD': ['HH:MM', 'HH:MM', ...] }
+        """
+        slots = LawyerAvailabilitySlot.objects.filter(lawyer=obj, is_active=True)
+        if not slots.exists():
+            return {}
+
+        availability_map = {}
+        today = timezone.now().date()
+        
+        # Map day_of_week (0=Monday, 6=Sunday) to slots
+        # Python's weekday(): 0=Monday, 6=Sunday
+        # Django/DB usually matches this, but let's assume 0=Monday
+        slots_by_day = {}
+        for slot in slots:
+            if slot.day_of_week not in slots_by_day:
+                slots_by_day[slot.day_of_week] = []
+            slots_by_day[slot.day_of_week].append(slot)
+
+        for i in range(30):
+            current_date = today + timezone.timedelta(days=i)
+            day_of_week = current_date.weekday() # 0=Monday
+            
+            if day_of_week in slots_by_day:
+                day_slots = slots_by_day[day_of_week]
+                time_slots = []
+                for slot in day_slots:
+                    # Generate 1-hour slots within the range
+                    start = slot.start_time
+                    end = slot.end_time
+                    
+                    # Simple logic: just add the start time for now, or generate hourly
+                    # Let's generate hourly slots
+                    current_time = start
+                    while current_time < end:
+                        time_str = current_time.strftime('%I:%M %p') # 10:00 AM
+                        time_slots.append(time_str)
+                        
+                        # Add 1 hour
+                        # Handling time addition is tricky with datetime.time, convert to datetime
+                        dt = timezone.datetime.combine(current_date, current_time)
+                        dt += timezone.timedelta(hours=1)
+                        current_time = dt.time()
+                
+                if time_slots:
+                    availability_map[str(current_date)] = sorted(list(set(time_slots))) # Unique and sorted
+        
+        return availability_map
 
 class AdminProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -230,6 +283,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = '__all__'
+        read_only_fields = ('sender', 'sent_at', 'is_read')
 
 class LawyerReviewSerializer(serializers.ModelSerializer):
     class Meta:

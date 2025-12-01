@@ -354,6 +354,71 @@ export const LawyerSettings: React.FC = () => {
         </form>
     );
 
+    const [verificationFiles, setVerificationFiles] = useState<{ identity: File | null; barCouncil: File | null }>({ identity: null, barCouncil: null });
+    const [isVerificationSaving, setIsVerificationSaving] = useState(false);
+
+    const handleVerificationSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!verificationFiles.identity && !verificationFiles.barCouncil) return;
+        setIsVerificationSaving(true);
+        try {
+            const updates: any = {};
+            if (verificationFiles.identity) updates.identity_document = verificationFiles.identity;
+            if (verificationFiles.barCouncil) updates.verification_document = verificationFiles.barCouncil;
+
+            await handleUpdateProfile(user.id, updates);
+
+            setToast({ message: "Verification documents submitted successfully!", type: 'success' });
+            setVerificationFiles({ identity: null, barCouncil: null });
+        } catch (error) {
+            setToast({ message: "Failed to upload documents.", type: 'error' });
+        } finally {
+            setIsVerificationSaving(false);
+        }
+    };
+
+    const renderVerificationTab = () => (
+        <form onSubmit={handleVerificationSubmit}>
+            <SectionCard title="Professional Verification" description="Upload your documents to get verified as a lawyer.">
+                <div className="space-y-6">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 rounded-lg text-sm">
+                        <p className="font-semibold">Current Status: {user.isVerified ? 'Verified' : 'Pending Verification'}</p>
+                        <p className="mt-1">Verified lawyers appear in search results and can accept cases.</p>
+                    </div>
+
+                    <div>
+                        <label htmlFor="bar-council-doc" className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Bar Council Certificate</label>
+                        <input
+                            id="bar-council-doc"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => setVerificationFiles(prev => ({ ...prev, barCouncil: e.target.files?.[0] || null }))}
+                            className="mt-2 block w-full text-sm text-cla-text-muted dark:text-cla-text-muted-dark file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cla-gold/20 file:text-cla-gold-darker hover:file:bg-cla-gold/30"
+                        />
+                        <p className="text-xs text-cla-text-muted dark:text-cla-text-muted-dark mt-1">Upload your Bar Council registration certificate.</p>
+                    </div>
+
+                    <div>
+                        <label htmlFor="identity-doc" className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">National ID / Passport</label>
+                        <input
+                            id="identity-doc"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => setVerificationFiles(prev => ({ ...prev, identity: e.target.files?.[0] || null }))}
+                            className="mt-2 block w-full text-sm text-cla-text-muted dark:text-cla-text-muted-dark file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cla-gold/20 file:text-cla-gold-darker hover:file:bg-cla-gold/30"
+                        />
+                        <p className="text-xs text-cla-text-muted dark:text-cla-text-muted-dark mt-1">Upload a clear copy of your NID or Passport.</p>
+                    </div>
+                </div>
+            </SectionCard>
+            <div className="mt-6 flex justify-start">
+                <button type="submit" disabled={(!verificationFiles.identity && !verificationFiles.barCouncil) || isVerificationSaving} className="px-6 py-2 bg-cla-gold text-cla-text font-semibold rounded-lg hover:bg-cla-gold-darker disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors w-48 text-center">
+                    {isVerificationSaving ? 'Uploading...' : 'Submit Documents'}
+                </button>
+            </div>
+        </form>
+    );
+
     return (
         <div className="animate-fade-in max-w-5xl mx-auto">
             <div className="border-b border-cla-border dark:border-cla-border-dark mb-8">
@@ -363,6 +428,7 @@ export const LawyerSettings: React.FC = () => {
                     <TabButton id="account" label="Account" icon={UserCircleIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                     <TabButton id="security" label="Security" icon={LockClosedIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                     <TabButton id="notifications" label="Notifications" icon={BellIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <TabButton id="verification" label="Verification" icon={LockClosedIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                 </nav>
             </div>
             <div className="space-y-8">
@@ -371,6 +437,7 @@ export const LawyerSettings: React.FC = () => {
                 {activeTab === 'account' && renderAccountTab()}
                 {activeTab === 'security' && renderSecurityTab()}
                 {activeTab === 'notifications' && renderNotificationsTab()}
+                {activeTab === 'verification' && renderVerificationTab()}
             </div>
         </div>
     );

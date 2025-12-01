@@ -1,16 +1,18 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../../../context/AppContext';
-import { UserGroupIcon, SearchIcon } from '../../icons';
+import { UserGroupIcon, SearchIcon, TrashIcon } from '../../icons';
 import { User } from '../../../types';
 import { VerifiedName } from '../../ui/VerifiedName';
+import { UserProfileDetailModal } from '../../admin/UserProfileDetailModal';
 
 export const AdminUsers: React.FC = () => {
     const context = useContext(AppContext);
     if (!context) return null;
-    const { users } = context;
+    const { users, deleteUser } = context;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState<'all' | 'citizen' | 'lawyer'>('all');
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -18,6 +20,12 @@ export const AdminUsers: React.FC = () => {
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
         return matchesSearch && matchesRole;
     });
+
+    const handleDeleteUser = async (userId: string) => {
+        if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            await deleteUser(userId);
+        }
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -86,8 +94,8 @@ export const AdminUsers: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.verificationStatus === 'Verified' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                                u.verificationStatus === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                                                    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                                            u.verificationStatus === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                                                'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
                                             }`}>
                                             {u.verificationStatus}
                                         </span>
@@ -96,8 +104,20 @@ export const AdminUsers: React.FC = () => {
                                         {/* Mock date since it's not in User type yet, or use a random one */}
                                         2023-10-27
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <button className="text-cla-gold hover:underline font-medium text-xs">View Details</button>
+                                    <td className="px-6 py-4 flex items-center gap-3">
+                                        <button
+                                            onClick={() => setSelectedUser(u)}
+                                            className="text-cla-gold hover:underline font-medium text-xs"
+                                        >
+                                            View Details
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteUser(u.id)}
+                                            className="text-red-500 hover:text-red-700 transition-colors"
+                                            title="Delete User"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -105,6 +125,13 @@ export const AdminUsers: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            {selectedUser && (
+                <UserProfileDetailModal
+                    user={selectedUser}
+                    onClose={() => setSelectedUser(null)}
+                />
+            )}
         </div>
     );
 };

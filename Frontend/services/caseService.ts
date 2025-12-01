@@ -108,8 +108,20 @@ const deleteCase = async (caseId: string): Promise<boolean> => {
   }
 };
 
+const getCases = async (): Promise<Case[]> => {
+  try {
+    const response = await apiClient.get('/cases/');
+    const payload = Array.isArray(response.data) ? response.data : response.data.results || [];
+    return payload.map(normalizeCase);
+  } catch (error) {
+    console.error('Get all cases error:', error);
+    return [];
+  }
+};
+
 export const caseService = {
   getUserCases,
+  getCases,
   getCaseById,
   createCase,
   updateCase,

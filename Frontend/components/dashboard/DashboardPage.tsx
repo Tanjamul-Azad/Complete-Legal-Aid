@@ -305,7 +305,7 @@ export const DashboardPage: React.FC = () => {
                 allUsers={users}
                 onSendMessage={handleSendMessage}
                 markConversationAsRead={markConversationAsRead}
-                initialSelectedUserId={context.chatTargetUserId}
+                initialSelectedUser={context.chatTargetUser}
             />
             <NotificationsPanel
                 isOpen={isNotificationsOpen}

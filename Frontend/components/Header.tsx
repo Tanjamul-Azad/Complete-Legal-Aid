@@ -84,7 +84,7 @@ export const Header: React.FC = () => {
                                 className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-cla-gold bg-cla-gold/10 rounded-full hover:bg-cla-gold/20 transition-all border border-cla-gold/20 animate-fade-in ml-4"
                             >
                                 <DashboardIcon className="w-4 h-4" />
-                                <span>Back to Dashboard</span>
+                                <span>Go to Dashboard</span>
                             </button>
                         )}
                     </div>
@@ -155,7 +155,7 @@ export const Header: React.FC = () => {
                         <NavItem page="contact" mobile closeMenu={closeMobileMenu}>Contact</NavItem>
                         {user && currentPage !== 'dashboard' && (
                             <button onClick={() => handleProfileNavigation('dashboard')} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-cla-gold hover:bg-cla-gold/10 transition-colors">
-                                Back to Dashboard
+                                Go to Dashboard
                             </button>
                         )}
                     </div>

@@ -53,22 +53,24 @@ function Check-Prerequisites {
 
     if (CommandExists "python") {
         Write-Color "Python found: $(python --version)" Green
-    } else {
+    }
+    else {
         Write-Color "Python not found. Install Python 3.10+." Red
         $missing = $true
     }
 
     if (CommandExists "node") {
         Write-Color "Node.js found: $(node --version)" Green
-    } else {
+    }
+    else {
         Write-Color "Node.js not found. Install Node.js 18+." Red
         $missing = $true
     }
 
     if (CommandExists "npm") {
         Write-Color "npm found: $(npm --version)" Green
-    } else
-        {
+    }
+    else {
         Write-Color "npm not found. Install npm." Red
         $missing = $true
     }
@@ -76,7 +78,8 @@ function Check-Prerequisites {
     $mysqlCmd = Get-Command mysql -ErrorAction SilentlyContinue
     if ($mysqlCmd) {
         Write-Color "MySQL found: $( & $mysqlCmd.Source --version )" Green
-    } else {
+    }
+    else {
         Write-Color "MySQL command-line client not detected. Continuing, but ensure MySQL Server is running and add its bin directory to PATH." Yellow
     }
 
@@ -97,7 +100,8 @@ function Setup-Backend {
         Write-Color "Creating Python virtual environment..." Yellow
         python -m venv venv
         Write-Color "Virtual environment created." Green
-    } else {
+    }
+    else {
         Write-Color "Virtual environment already exists." Green
     }
 
@@ -111,7 +115,8 @@ function Setup-Backend {
         Write-Color "Installing Python dependencies..." Yellow
         pip install -r requirements.txt | Out-Null
         Write-Color "Dependencies installed." Green
-    } else {
+    }
+    else {
         Write-Color "requirements.txt missing." Red
         exit 1
     }
@@ -120,15 +125,16 @@ function Setup-Backend {
         if (Test-Path ".env.example") {
             Copy-Item ".env.example" ".env"
             Write-Color "Edit Backend/.env with database credentials." Yellow
-        } else {
+        }
+        else {
             Write-Color ".env.example missing." Red
             exit 1
         }
     }
 
- Write-Color "Checking database connectivity..." Yellow
-try {
-    $dbTestCode = @"
+    Write-Color "Checking database connectivity..." Yellow
+    try {
+        $dbTestCode = @"
 import pymysql
 import os
 from dotenv import load_dotenv
@@ -140,16 +146,16 @@ conn = pymysql.connect(
     user=os.getenv('DB_USER', 'root'),
     password=os.getenv('DB_PASSWORD', '12345678')
 )
-print("OK")
+print('OK')
 "@
 
-    python -c $dbTestCode | Out-Null
-    Write-Color "Database connection confirmed." Green
-}
-catch {
-    Write-Color "Database unreachable. Running create_db.py..." Yellow
-    python create_db.py
-}
+        python -c $dbTestCode | Out-Null
+        Write-Color "Database connection confirmed." Green
+    }
+    catch {
+        Write-Color "Database unreachable. Running create_db.py..." Yellow
+        python create_db.py
+    }
 
 
     Write-Color "Applying migrations..." Yellow
@@ -178,7 +184,8 @@ function Setup-Frontend {
         Write-Color "Installing Node.js dependencies..." Yellow
         npm install | Out-Null
         Write-Color "Dependencies installed." Green
-    } else {
+    }
+    else {
         Write-Color "Node modules already present. Syncing..." Yellow
         npm install | Out-Null
     }
@@ -187,7 +194,8 @@ function Setup-Frontend {
         if (Test-Path ".env.example") {
             Copy-Item ".env.example" ".env"
             Write-Color "Edit Frontend/.env with API config." Yellow
-        } else {
+        }
+        else {
             Write-Color ".env.example missing." Red
             exit 1
         }
@@ -196,13 +204,14 @@ function Setup-Frontend {
     Write-Color "Frontend setup complete." Green
 }
 
+
 function Kill-Port($port) {
     $pids = (Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess)
 
-    foreach ($pid in $pids) {
-        Write-Color "Killing PID $pid on port $port..." Yellow
-        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+    foreach ($process_id in $pids) {
+        Write-Color "Killing PID $process_id on port $port..." Yellow
+        Stop-Process -Id $process_id -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -231,7 +240,7 @@ function Start-Frontend {
 }
 
 function Show-Help {
-@"
+    @"
 Usage: run_local.ps1 [options]
 
 Options:
@@ -256,7 +265,8 @@ Check-Prerequisites
 if (-not $SkipSetup) {
     if (-not $FrontendOnly) { Setup-Backend }
     if (-not $BackendOnly) { Setup-Frontend }
-} else {
+}
+else {
     Write-Color "Setup phase skipped." Yellow
 }
 
@@ -266,7 +276,7 @@ if ($SetupOnly) {
 }
 
 if (-not $FrontendOnly) { Start-Backend }
-if (-not $BackendOnly)  { Start-Frontend }
+if (-not $BackendOnly) { Start-Frontend }
 
 Header "System Operational"
 

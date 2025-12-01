@@ -49,13 +49,34 @@ const normalizeAppointment = (payload: any): Appointment => {
   };
 };
 
+const parseTime = (timeStr: string): string => {
+  const [time, modifier] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':');
+
+  // Convert to 24-hour format
+  if (modifier === 'AM') {
+    if (hours === '12') {
+      hours = '00'; // 12 AM is 00:xx in 24-hour format
+    }
+  } else if (modifier === 'PM') {
+    if (hours !== '12') {
+      hours = (parseInt(hours, 10) + 12).toString(); // 1 PM = 13, 2 PM = 14, etc.
+    }
+    // 12 PM stays as 12
+  }
+
+  return `${hours.padStart(2, '0')}:${minutes}`;
+};
+
 const serializeAppointmentPayload = (data: Partial<Appointment>) => {
   const payload: Record<string, unknown> = {};
   if (data.clientId) payload.citizen = data.clientId;
   if (data.lawyerId) payload.lawyer = data.lawyerId;
   if (data.caseId) payload.case = data.caseId;
   if (data.date && data.time) {
-    const startIso = new Date(`${data.date}T${data.time}`).toISOString();
+    // Convert "03:00 PM" to "15:00"
+    const time24 = parseTime(data.time);
+    const startIso = new Date(`${data.date}T${time24}:00`).toISOString();
     payload.scheduled_start = startIso;
     if (data.duration) {
       payload.scheduled_end = new Date(new Date(startIso).getTime() + data.duration * 60000).toISOString();

@@ -292,6 +292,16 @@ const addLawyerReview = async (lawyerId: string, review: any) => {
   }
 };
 
+const deleteUser = async (userId: string): Promise<boolean> => {
+  try {
+    await apiClient.delete(`/users/${userId}/`);
+    return true;
+  } catch (error) {
+    console.error('Delete user error:', error);
+    return false;
+  }
+};
+
 const getAllUsers = async (): Promise<User[]> => {
   try {
     const response = await apiClient.get('/users/');
@@ -317,4 +327,5 @@ export const authService = {
   updateUserVerificationStatus,
   addLawyerReview,
   getAllUsers,
+  deleteUser,
 };

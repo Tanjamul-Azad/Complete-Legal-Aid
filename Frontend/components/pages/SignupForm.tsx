@@ -67,13 +67,13 @@ export const SignupForm: React.FC<SignupFormProps> = ({
                     </button>
                 </nav>
             </div>
-            
+
             <h2 className="text-2xl font-bold text-center text-cla-text dark:text-cla-text-dark pt-4">
                 {signupRole === 'citizen' ? "Create Your Account — Access Justice Simplified" : "Join as a Verified Legal Professional"}
             </h2>
 
             <div className="space-y-4">
-                <FormInput id="name" name="name" label="Full Name" value={formData.name} onChange={handleInputChange} error={errors.name}/>
+                <FormInput id="name" name="name" label="Full Name" value={formData.name} onChange={handleInputChange} error={errors.name} />
                 <FormInput id="email" name="email" label="Email Address" type="email" value={formData.email} onChange={handleInputChange} error={errors.email} />
                 <FormInput id="phone" name="phone" label="Phone Number" type="tel" value={formData.phone} onChange={handleInputChange} error={errors.phone} />
                 <PasswordInput id="password" name="password" label="Password" value={formData.password} onChange={handleInputChange} error={errors.password} show={showPassword} toggleShow={() => setShowPassword(!showPassword)} />
@@ -84,13 +84,9 @@ export const SignupForm: React.FC<SignupFormProps> = ({
                     <>
                         <FormInput id="lawyerId" name="lawyerId" label="Lawyer ID / Bar Council Registration Number" value={formData.lawyerId} onChange={handleInputChange} error={errors.lawyerId} />
                         <FormInput id="specializations" name="specializations" label="Specializations (comma-separated)" value={formData.specializations} onChange={handleInputChange} error={errors.specializations} />
+
+                        {/* Document upload removed to allow optional verification later in settings */}
                         <div>
-                             <label htmlFor="doc" className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Upload Verification Document (PDF/JPG)</label>
-                            <input id="doc" name="doc" type="file" accept=".pdf,.jpg,.jpeg" onChange={handleFileChange} className="mt-1 block w-full text-sm text-cla-text-muted dark:text-cla-text-muted-dark file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cla-gold/20 file:text-cla-gold-darker hover:file:bg-cla-gold/30"/>
-                            <p className="text-xs text-cla-text-muted dark:text-cla-text-muted-dark mt-1">Max size: 5 MB. Must be a clear copy of your NID or license.</p>
-                             {errors.doc && <p className="mt-1 text-xs text-red-500">{errors.doc}</p>}
-                        </div>
-                         <div>
                             <label htmlFor="commMode" className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Preferred Communication Mode</label>
                             <select id="commMode" name="commMode" value={formData.commMode} onChange={handleInputChange} className="mt-1 block w-full pl-3 pr-10 py-2 border-cla-border dark:border-cla-border-dark rounded-md bg-cla-bg dark:bg-cla-bg-dark text-cla-text dark:text-cla-text-dark">
                                 <option>Email</option><option>Phone</option><option>Both</option>
@@ -98,7 +94,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
                         </div>
                     </>
                 )}
-                 <div>
+                <div>
                     <label htmlFor="language" className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Preferred Language</label>
                     <select id="language" name="language" value={formData.language} onChange={handleInputChange} className="mt-1 block w-full pl-3 pr-10 py-2 border-cla-border dark:border-cla-border-dark rounded-md bg-cla-bg dark:bg-cla-bg-dark text-cla-text dark:text-cla-text-dark">
                         <option>English</option><option>Bangla</option>
@@ -107,18 +103,18 @@ export const SignupForm: React.FC<SignupFormProps> = ({
 
                 <div className="flex items-start">
                     <div className="flex items-center h-5">
-                        <input id="terms" name="terms" type="checkbox" checked={formData.terms} onChange={handleInputChange} className="h-4 w-4 text-cla-gold focus:ring-cla-gold border-gray-300 rounded"/>
+                        <input id="terms" name="terms" type="checkbox" checked={formData.terms} onChange={handleInputChange} className="h-4 w-4 text-cla-gold focus:ring-cla-gold border-gray-300 rounded" />
                     </div>
                     <div className="ml-3 text-sm">
                         <label htmlFor="terms" className="text-cla-text-muted dark:text-cla-text-muted-dark">I agree to the <button type="button" onClick={() => showLegalPage('Terms & Privacy Policy', 'terms')} className="font-medium text-cla-gold hover:underline">Terms & Privacy Policy</button></label>
                         {errors.terms && <p className="mt-1 text-xs text-red-500">{errors.terms}</p>}
                     </div>
                 </div>
-                
-                 {signupRole === 'lawyer' && (
-                     <div className="flex items-start">
+
+                {signupRole === 'lawyer' && (
+                    <div className="flex items-start">
                         <div className="flex items-center h-5">
-                            <input id="lawyerTerms" name="lawyerTerms" type="checkbox" checked={formData.lawyerTerms} onChange={handleInputChange} className="h-4 w-4 text-cla-gold focus:ring-cla-gold border-gray-300 rounded"/>
+                            <input id="lawyerTerms" name="lawyerTerms" type="checkbox" checked={formData.lawyerTerms} onChange={handleInputChange} className="h-4 w-4 text-cla-gold focus:ring-cla-gold border-gray-300 rounded" />
                         </div>
                         <div className="ml-3 text-sm">
                             <label htmlFor="lawyerTerms" className="text-cla-text-muted dark:text-cla-text-muted-dark">I confirm that the provided details are true and agree to Complete Legal Aid’s professional conduct policy.</label>
@@ -129,17 +125,17 @@ export const SignupForm: React.FC<SignupFormProps> = ({
             </div>
 
             {errors.form && <p className="text-sm text-red-600 text-center">{errors.form}</p>}
-            
+
             <div>
                 <button type="submit" disabled={isLoading} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-cla-text bg-cla-gold hover:bg-cla-gold-darker focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cla-gold disabled:bg-gray-400">
-                     {isLoading ? 'Creating account...' : (signupRole === 'citizen' ? 'Create My Account' : 'Register as Lawyer')}
+                    {isLoading ? 'Creating account...' : (signupRole === 'citizen' ? 'Create My Account' : 'Register as Lawyer')}
                 </button>
                 <p className="mt-4 text-center text-sm">
                     Already have an account? <button type="button" onClick={() => setView('login')} className="font-medium text-cla-gold hover:text-cla-gold-darker">Log In</button>
                 </p>
             </div>
-             <GoogleSignIn view="signup" openGoogleAuth={openGoogleAuth} />
-             <p className="mt-4 text-xs text-center text-cla-text-muted dark:text-cla-text-muted-dark">
+            <GoogleSignIn view="signup" openGoogleAuth={openGoogleAuth} />
+            <p className="mt-4 text-xs text-center text-cla-text-muted dark:text-cla-text-muted-dark">
                 Your personal data is protected under the Digital Security Act of Bangladesh and will be used solely for verification and case management.
             </p>
         </>

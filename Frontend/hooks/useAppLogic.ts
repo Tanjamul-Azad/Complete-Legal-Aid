@@ -1,10 +1,10 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import type { User, UserRole, Page, DashboardSubPage, SimulatedEmail, Notification, Case, Appointment, ActivityLog, Message, EvidenceDocument, Review, VerificationStatus, AppTheme, SiteContent, SupportMessage, EmergencyAlert } from '../types';
 import { authService } from '../services/authService';
 import { caseService } from '../services/caseService';
 import { appointmentService } from '../services/appointmentService';
 import { notificationService } from '../services/notificationService';
+import { chatService } from '../services/chatService';
 import { evidenceService } from '../services/evidenceService';
 import { termsContent } from '../legal/terms';
 import { privacyContent } from '../legal/privacy';
@@ -67,7 +67,7 @@ export const useAppLogic = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
     const [typingLawyers, setTypingLawyers] = useState<Record<string, boolean>>({});
-    const [chatTargetUserId, setChatTargetUserId] = useState<string | null>(null);
+    const [chatTargetUser, setChatTargetUser] = useState<User | null>(null);
     const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => {
         const stored = localStorage.getItem('cla-support-messages');
         return stored ? JSON.parse(stored) : [];
@@ -86,7 +86,7 @@ export const useAppLogic = () => {
         if (!user) return;
 
         const newAlert: EmergencyAlert = {
-            id: `alert-${Date.now()}`,
+            id: `alert - ${Date.now()} `,
             userId: user.id,
             userName: user.name,
             userPhone: user.phone || 'N/A',
@@ -104,7 +104,7 @@ export const useAppLogic = () => {
         // Also create a high-priority notification for admins (simulated by adding to general notifications for now, 
         // in a real app this would be pushed to admin users)
         const adminNotification: Notification = {
-            id: `notif-alert-${Date.now()}`,
+            id: `notif - alert - ${Date.now()} `,
             userId: 'admin-1', // Assuming an admin ID or broadcast
             type: 'system',
             title: 'CRITICAL: Emergency Alert',
@@ -127,7 +127,7 @@ export const useAppLogic = () => {
             localStorage.setItem('cla-emergency-alerts', JSON.stringify(updated));
             return updated;
         });
-        setToast({ message: `Alert marked as ${status}`, type: 'success' });
+        setToast({ message: `Alert marked as ${status} `, type: 'success' });
     };
 
     const addSupportMessage = (msg: Omit<SupportMessage, 'id' | 'timestamp' | 'status'>) => {
@@ -175,23 +175,52 @@ export const useAppLogic = () => {
 
 
     // Initialization
+    // Poll for new messages every 5 seconds
+    useEffect(() => {
+        if (!user) return;
+
+        const intervalId = setInterval(async () => {
+            const newMessages = await chatService.getMessages();
+            setMessages(prev => {
+                // Only update if there are new messages to avoid re-renders
+                if (newMessages.length !== prev.length) {
+                    return newMessages;
+                }
+                // Check for last message timestamp difference
+                const lastNew = newMessages[newMessages.length - 1];
+                const lastPrev = prev[prev.length - 1];
+                if (lastNew && lastPrev && lastNew.id !== lastPrev.id) {
+                    return newMessages;
+                }
+                return prev;
+            });
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, [user]);
+
     const bootstrapUserState = useCallback(async (currentUser: User) => {
         setUser(currentUser);
-        const [userCases, userAppointments, userNotifications, documents] = await Promise.all([
+        const [userCases, userAppointments, userNotifications, documents, userMessages] = await Promise.all([
             caseService.getUserCases(currentUser),
             appointmentService.getUserAppointments(currentUser.id, currentUser.role),
             notificationService.getUserNotifications(),
             evidenceService.getDocuments(),
+            chatService.getMessages(), // Fetch messages for all users, not just admins
         ]);
 
         setCases(userCases);
         setAppointments(userAppointments);
         setNotifications(userNotifications);
         setEvidenceDocuments(documents);
+        setMessages(userMessages); // Set messages for all users
 
         if (currentUser.role === 'admin') {
             const allUsers = await authService.getAllUsers();
             setUsers(allUsers);
+            const fetchedCases = await caseService.getCases();
+            setCases(fetchedCases);
+            // Messages already fetched above for all users
         } else {
             setUsers([currentUser]);
         }
@@ -302,7 +331,7 @@ export const useAppLogic = () => {
                 if (expectedRole === 'lawyer' && userRole !== 'lawyer') return 'ROLE_MISMATCH';
                 if (expectedRole === 'citizen' && userRole !== 'citizen') return 'ROLE_MISMATCH';
             }
-            
+
             // Normalize the role in the user object for consistency
             foundUser.role = userRole;
 
@@ -322,14 +351,12 @@ export const useAppLogic = () => {
 
             await bootstrapUserState(foundUser);
 
-            if (foundUser.verificationStatus === 'Verified') {
-                handleSetCurrentPage('dashboard');
-                // Don't override subpage here to allow persistence logic to work,
-                // unless it's a fresh login with no history? 
-                // Actually, let's default to overview on fresh login for better UX if empty
-                if (!localStorage.getItem('cla-last-subpage')) {
-                    setDashboardSubPage('overview');
-                }
+            // Redirect to dashboard for all users, even if unverified
+            handleSetCurrentPage('dashboard');
+
+            // Default to overview on fresh login for better UX if empty
+            if (!localStorage.getItem('cla-last-subpage')) {
+                setDashboardSubPage('overview');
             }
             return foundUser;
         }
@@ -350,16 +377,16 @@ export const useAppLogic = () => {
             experience: newUser.experience,
             verificationDocument: options?.verificationDocument,
         };
-        
+
         const result = await authService.signup(registerData);
         if ('error' in result) return null;
 
         const { user: createdUser } = result;
         await bootstrapUserState(createdUser);
-        
+
         // Simulate email for demo purposes (in real app, backend sends it)
         const email: SimulatedEmail = {
-            id: `email-${Date.now()}`,
+            id: `email - ${Date.now()} `,
             to: newUser.email,
             from: 'system@cla.com',
             subject: 'Verify your email',
@@ -416,8 +443,8 @@ export const useAppLogic = () => {
         const result = await authService.requestPasswordReset(email);
         if (result && result.success) {
             // Simulate email for demo
-             const simEmail: SimulatedEmail = {
-                id: `email-reset-${Date.now()}`,
+            const simEmail: SimulatedEmail = {
+                id: `email - reset - ${Date.now()} `,
                 to: email,
                 from: 'support@cla.com',
                 subject: 'Reset Password',
@@ -460,7 +487,7 @@ export const useAppLogic = () => {
 
             if (user) {
                 const newLog: ActivityLog = {
-                    id: `act-${Date.now()}`,
+                    id: `act - ${Date.now()} `,
                     userId: user.id,
                     message: `You uploaded "${file.name}".`,
                     timestamp: 'Just now',
@@ -489,10 +516,13 @@ export const useAppLogic = () => {
         }
     };
 
-    const handleSendMessage = (receiverId: string, text: string, caseId?: string, attachment?: { name: string, url: string, size: number }) => {
+    const handleSendMessage = async (receiverId: string, text: string, caseId?: string, attachment?: { name: string, url: string, size: number }) => {
         if (!user) return;
-        const newMessage: Message = {
-            id: `msg-${Date.now()}`,
+
+        // Optimistic update
+        const tempId = `msg - ${Date.now()} `;
+        const optimisticMessage: Message = {
+            id: tempId,
             senderId: user.id,
             receiverId,
             text,
@@ -501,7 +531,18 @@ export const useAppLogic = () => {
             caseId,
             attachment
         };
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => [...prev, optimisticMessage]);
+
+        const sentMessage = await chatService.sendMessage(receiverId, text, caseId);
+
+        if (sentMessage) {
+            // Replace optimistic message with real one
+            setMessages(prev => prev.map(m => m.id === tempId ? sentMessage : m));
+        } else {
+            // Revert optimistic update on failure
+            setMessages(prev => prev.filter(m => m.id !== tempId));
+            setToast({ message: 'Failed to send message.', type: 'error' });
+        }
 
         // Simulate reply
         if (caseId) {
@@ -509,7 +550,7 @@ export const useAppLogic = () => {
             setTimeout(() => {
                 setTypingLawyers(prev => ({ ...prev, [caseId]: false }));
                 const reply: Message = {
-                    id: `msg-reply-${Date.now()}`,
+                    id: `msg - reply - ${Date.now()} `,
                     senderId: receiverId,
                     receiverId: user.id,
                     text: "I have received your message. I will review it shortly.",
@@ -521,7 +562,7 @@ export const useAppLogic = () => {
 
                 // Notification for reply
                 const notif: Notification = {
-                    id: `notif-${Date.now()}`,
+                    id: `notif - ${Date.now()} `,
                     userId: user.id,
                     type: 'new_message',
                     title: 'New Message',
@@ -623,6 +664,16 @@ export const useAppLogic = () => {
         setUser(prev => (prev && prev.id === updatedUser.id ? updatedUser : prev));
     };
 
+    const deleteUser = async (userId: string) => {
+        const success = await authService.deleteUser(userId);
+        if (success) {
+            setUsers(prev => prev.filter(u => u.id !== userId));
+            setToast({ message: "User deleted successfully.", type: 'success' });
+        } else {
+            setToast({ message: "Failed to delete user.", type: 'error' });
+        }
+    };
+
     const handleUpdateAppointment = (id: string, data: Partial<Appointment>) => {
         setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...data } : a));
     };
@@ -694,9 +745,9 @@ export const useAppLogic = () => {
         setComplaintModalTarget, setChatOpen, setGmailInboxOpen, setToast, setReviewTarget, handleReviewSubmit,
         setDashboardSubPage, setSelectedCaseId, handleNotificationNavigation, setInboxOpen, setNotificationsOpen, openInbox, openNotifications,
         markAllNotificationsAsRead, markMessagesAsRead, markConversationAsRead, handleDocumentUpload, handleDeleteDocument, handleSendMessage,
-        setSelectedCaseForUpload, handleUpdateProfile, handleChangePassword, updateUserVerification, handleUpdateAppointment, toggleTheme, setTheme,
+        setSelectedCaseForUpload, handleUpdateProfile, handleChangePassword, updateUserVerification, deleteUser, handleUpdateAppointment, toggleTheme, setTheme,
         siteContent, updateSiteContent,
-        chatTargetUserId, setChatTargetUserId,
+        chatTargetUser, setChatTargetUser,
         supportMessages, addSupportMessage,
         aiChatInitialPrompt, setAiChatInitialPrompt,
         emergencyAlerts, sendEmergencyAlert, resolveEmergencyAlert

@@ -1,7 +1,6 @@
-
 import React, { useContext, useMemo } from 'react';
 import { AppContext } from '../../../context/AppContext';
-import { MessageIcon, ClockIcon, SearchIcon, BriefcaseIcon } from '../../icons';
+import { MessageIcon, ClockIcon, SearchIcon, BriefcaseIcon, BackIcon } from '../../icons';
 
 export const LawyerMessages: React.FC = () => {
     const context = useContext(AppContext);
@@ -30,7 +29,7 @@ export const LawyerMessages: React.FC = () => {
                 });
             }
         }
-        
+
         // Calc unreads
         for (const message of messages) {
             if (message.receiverId === user.id && !message.read) {
@@ -48,24 +47,33 @@ export const LawyerMessages: React.FC = () => {
             setDashboardSubPage('cases');
         } else {
             // If no case attached, maybe go to clients or generic chat view (fallback to cases for now)
-            setDashboardSubPage('cases'); 
+            setDashboardSubPage('cases');
         }
     };
 
     return (
         <div className="animate-fade-in max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-cla-text dark:text-white">Client Messages</h1>
-                    <p className="text-sm text-cla-text-muted dark:text-cla-text-muted-dark mt-1">
-                        Manage communications across all your active cases.
-                    </p>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setDashboardSubPage('overview')}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                        title="Back to Overview"
+                    >
+                        <BackIcon className="w-5 h-5" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-cla-text dark:text-white">Client Messages</h1>
+                        <p className="text-sm text-cla-text-muted dark:text-cla-text-muted-dark mt-1">
+                            Manage communications across all your active cases.
+                        </p>
+                    </div>
                 </div>
                 <div className="relative">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input 
-                        type="text" 
-                        placeholder="Search messages..." 
+                    <input
+                        type="text"
+                        placeholder="Search messages..."
                         className="pl-9 pr-4 py-2 bg-white dark:bg-cla-surface-dark border border-cla-border dark:border-cla-border-dark rounded-full text-sm focus:ring-2 focus:ring-cla-gold focus:border-transparent w-64 shadow-sm"
                     />
                 </div>
@@ -75,8 +83,8 @@ export const LawyerMessages: React.FC = () => {
                 {conversations.length > 0 ? (
                     <div className="divide-y divide-cla-border dark:divide-cla-border-dark">
                         {conversations.map((convo) => (
-                            <div 
-                                key={convo.participant.id} 
+                            <div
+                                key={convo.participant.id}
                                 onClick={() => handleChatClick(convo)}
                                 className="p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-5 group"
                             >
@@ -103,7 +111,7 @@ export const LawyerMessages: React.FC = () => {
                                         </div>
                                         <span className="text-xs text-gray-500 flex items-center gap-1">
                                             <ClockIcon className="w-3 h-3" />
-                                            {new Date(convo.latestMessage.timestamp).toLocaleDateString([], {month: 'short', day: 'numeric'})}
+                                            {new Date(convo.latestMessage.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                     <p className={`text-sm truncate pr-4 ${convo.unreadCount > 0 ? 'text-cla-text dark:text-white font-medium' : 'text-gray-500'}`}>

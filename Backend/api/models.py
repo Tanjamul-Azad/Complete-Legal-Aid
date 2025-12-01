@@ -366,7 +366,7 @@ class ConsultationBooking(models.Model):
     )
 
     booking_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    case = models.ForeignKey(Case, on_delete=models.CASCADE)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, null=True, blank=True)
     citizen = models.ForeignKey(User, on_delete=models.CASCADE)
     lawyer = models.ForeignKey(LawyerProfile, on_delete=models.CASCADE)
     scheduled_start = models.DateTimeField()
@@ -404,8 +404,9 @@ class Notification(models.Model):
 
 class ChatMessage(models.Model):
     message_id = models.BigAutoField(primary_key=True)
-    case = models.ForeignKey(Case, on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, null=True, blank=True)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages', null=True, blank=True)
     message_text = models.TextField()
     attachment = models.ForeignKey(EvidenceDocument, on_delete=models.SET_NULL, null=True, blank=True)
     sent_at = models.DateTimeField(auto_now_add=True)

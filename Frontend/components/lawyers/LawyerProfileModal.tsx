@@ -2,13 +2,15 @@ import React, { useState, useContext } from 'react';
 import type { User, UserRole } from '../../types';
 import { AppContext } from '../../context/AppContext';
 import { StarIcon, CloseIcon } from '../icons';
+import { appointmentService } from '../../services/appointmentService';
 
 export const LawyerProfileModal: React.FC<{ lawyer: User, onClose: () => void }> = ({ lawyer, onClose }) => {
-    const { user: currentUser, goToAuth, setChatTargetUserId, setInboxOpen } = useContext(AppContext);
+    const { user: currentUser, goToAuth, setChatTargetUser, setInboxOpen } = useContext(AppContext);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
 
-    const handleBooking = () => {
+    const handleBooking = async () => {
         if (!currentUser) {
             alert("Please sign in or create an account to book an appointment.");
             goToAuth('login');
@@ -19,11 +21,73 @@ export const LawyerProfileModal: React.FC<{ lawyer: User, onClose: () => void }>
             alert("Please select a date and time.");
             return;
         }
-        alert(`Appointment with ${lawyer.name} on ${selectedDate} at ${selectedTime} has been requested.`);
-        onClose();
+
+        const appointment = await appointmentService.createAppointment({
+            clientId: currentUser.id,
+            lawyerId: lawyer.profileId || lawyer.id, // Use profileId for LawyerProfile ID, fallback to id
+            date: selectedDate,
+            time: selectedTime,
+            duration: 60,
+            mode: lawyer.communicationMode === 'Phone' ? 'Online' : 'In-Person',
+            status: 'Pending',
+            title: `Consultation with ${lawyer.name}`
+        });
+
+        if (appointment) {
+            alert(`Appointment with ${lawyer.name} on ${selectedDate} at ${selectedTime} has been requested.`);
+            onClose();
+        } else {
+            alert("Failed to book appointment. Please try again.");
+        }
     };
 
-    const availableDates = Object.keys(lawyer.availability || {}).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    const availableDates = Object.keys(lawyer.availability || {});
+
+    const getDaysInMonth = (date: Date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const days = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+        return { days, firstDay };
+    };
+
+    const { days, firstDay } = getDaysInMonth(currentMonth);
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const renderCalendar = () => {
+        const daysArray = [];
+        for (let i = 0; i < firstDay; i++) {
+            daysArray.push(<div key={`empty-${i}`} className="p-2"></div>);
+        }
+        for (let d = 1; d <= days; d++) {
+            const dateStr = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d).toDateString();
+            // Format date as YYYY-MM-DD for comparison with availability keys
+            const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d);
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+
+            const isAvailable = availableDates.includes(formattedDate);
+            const isSelected = selectedDate === formattedDate;
+
+            daysArray.push(
+                <button
+                    key={d}
+                    disabled={!isAvailable}
+                    onClick={() => { setSelectedDate(formattedDate); setSelectedTime(null); }}
+                    className={`p-2 rounded-full w-8 h-8 flex items-center justify-center text-sm transition-all
+                        ${isSelected ? 'bg-cla-gold text-white font-bold' : ''}
+                        ${!isSelected && isAvailable ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer font-medium' : ''}
+                        ${!isSelected && !isAvailable ? 'text-gray-300 cursor-not-allowed' : ''}
+                    `}
+                >
+                    {d}
+                </button>
+            );
+        }
+        return daysArray;
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] animate-modal-fade-in p-4">
@@ -87,11 +151,20 @@ export const LawyerProfileModal: React.FC<{ lawyer: User, onClose: () => void }>
                                 <h3 className="font-bold text-lg text-cla-text dark:text-cla-text-dark">Schedule Appointment</h3>
                                 <div className="space-y-4 mt-2">
                                     <div>
-                                        <label className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Select Date</label>
-                                        <select onChange={(e) => { setSelectedDate(e.target.value); setSelectedTime(null); }} className="mt-1 block w-full p-2 border-cla-border dark:border-cla-border-dark rounded-md bg-cla-bg dark:bg-cla-bg-dark text-cla-text dark:text-cla-text-dark">
-                                            <option value="">Select a date</option>
-                                            {availableDates.map(date => <option key={date} value={date}>{new Date(date).toDateString()}</option>)}
-                                        </select>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Select Date</label>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))} className="p-1 hover:bg-gray-100 rounded">&lt;</button>
+                                                <span className="text-sm font-bold">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                                                <button onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))} className="p-1 hover:bg-gray-100 rounded">&gt;</button>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className="text-xs font-bold text-gray-400">{d}</span>)}
+                                        </div>
+                                        <div className="grid grid-cols-7 gap-1">
+                                            {renderCalendar()}
+                                        </div>
                                     </div>
                                     {selectedDate && lawyer.availability?.[selectedDate] && (
                                         <div>
@@ -127,7 +200,7 @@ export const LawyerProfileModal: React.FC<{ lawyer: User, onClose: () => void }>
                                 onClose();
                                 return;
                             }
-                            setChatTargetUserId(lawyer.id);
+                            setChatTargetUser(lawyer);
                             setInboxOpen(true);
                             onClose();
                         }}

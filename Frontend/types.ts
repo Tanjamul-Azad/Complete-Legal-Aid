@@ -54,6 +54,7 @@ export interface User {
       tenMinutes: boolean;
     }
   };
+  availability?: Record<string, string[]>; // { "2023-10-27": ["10:00", "11:00"] }
 
   // Verification fields
   verificationToken?: string;
@@ -67,10 +68,10 @@ export interface User {
   bio?: string;
   location?: string;
   fees?: number;
-  availability?: { [date: string]: string[] };
   verificationDocs?: { name: string; url: string }[];
   lawyerId?: string; // Bar Council ID
   communicationMode?: 'Email' | 'Phone' | 'Both';
+  profileId?: string; // LawyerProfile ID for booking appointments
 }
 
 

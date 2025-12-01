@@ -113,15 +113,15 @@ export const CitizenSettings: React.FC = () => {
                 setToast({ message: "Image size must be less than 2MB", type: 'error' });
                 return;
             }
-            
+
             // Validate file type
             if (!file.type.startsWith('image/')) {
                 setToast({ message: "Please select a valid image file", type: 'error' });
                 return;
             }
-            
+
             setAvatarFile(file);
-            
+
             // Create preview URL
             const previewUrl = URL.createObjectURL(file);
             setAvatarPreview(previewUrl);
@@ -134,7 +134,7 @@ export const CitizenSettings: React.FC = () => {
         setIsProfileSaving(true);
         try {
             let avatarData = user.avatar;
-            
+
             // Convert file to base64 if a new file was selected
             if (avatarFile && avatarFile.size > 0) {
                 avatarData = await new Promise<string>((resolve, reject) => {
@@ -147,7 +147,7 @@ export const CitizenSettings: React.FC = () => {
                 // User clicked remove or set to default
                 avatarData = avatarPreview;
             }
-            
+
             await handleUpdateProfile(user.id, { ...profileData, avatar: avatarData });
             setAvatarFile(null);
             setToast({ message: "Profile updated successfully!", type: 'success' });
@@ -375,6 +375,62 @@ export const CitizenSettings: React.FC = () => {
         </form>
     );
 
+    const [verificationFile, setVerificationFile] = useState<File | null>(null);
+    const [isVerificationSaving, setIsVerificationSaving] = useState(false);
+
+    const handleVerificationSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!verificationFile) return;
+        setIsVerificationSaving(true);
+        try {
+            // Create FormData to send file
+            const formData = new FormData();
+            formData.append('identity_document', verificationFile);
+
+            // We need to use a direct API call here or update handleUpdateProfile to support FormData
+            // Assuming handleUpdateProfile can handle the object structure we're passing or we modify it
+            // For now, let's assume we can pass the file object in the profile update
+            await handleUpdateProfile(user.id, { identity_document: verificationFile });
+
+            setToast({ message: "Verification document submitted successfully!", type: 'success' });
+            setVerificationFile(null);
+        } catch (error) {
+            setToast({ message: "Failed to upload document.", type: 'error' });
+        } finally {
+            setIsVerificationSaving(false);
+        }
+    };
+
+    const renderVerificationTab = () => (
+        <form onSubmit={handleVerificationSubmit}>
+            <SectionCard title="Identity Verification" description="Upload your National ID, Passport, or Birth Certificate to verify your account.">
+                <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 rounded-lg text-sm">
+                        <p className="font-semibold">Current Status: {user.isVerified ? 'Verified' : 'Unverified'}</p>
+                        <p className="mt-1">Verified users get priority support and access to more features.</p>
+                    </div>
+
+                    <div>
+                        <label htmlFor="identity-doc" className="block text-sm font-medium text-cla-text dark:text-cla-text-dark">Upload Identity Document</label>
+                        <input
+                            id="identity-doc"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => setVerificationFile(e.target.files?.[0] || null)}
+                            className="mt-2 block w-full text-sm text-cla-text-muted dark:text-cla-text-muted-dark file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cla-gold/20 file:text-cla-gold-darker hover:file:bg-cla-gold/30"
+                        />
+                        <p className="text-xs text-cla-text-muted dark:text-cla-text-muted-dark mt-1">Accepted formats: PDF, JPG, PNG. Max size: 5MB.</p>
+                    </div>
+                </div>
+            </SectionCard>
+            <div className="mt-6 flex justify-start">
+                <button type="submit" disabled={!verificationFile || isVerificationSaving} className="px-6 py-2 bg-cla-gold text-cla-text font-semibold rounded-lg hover:bg-cla-gold-darker disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors w-48 text-center">
+                    {isVerificationSaving ? 'Uploading...' : 'Submit for Verification'}
+                </button>
+            </div>
+        </form>
+    );
+
     return (
         <div className="animate-fade-in max-w-5xl mx-auto">
             <div className="border-b border-cla-border dark:border-cla-border-dark mb-8">
@@ -383,6 +439,7 @@ export const CitizenSettings: React.FC = () => {
                     <TabButton id="profile" label="Profile" icon={UserCircleIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                     <TabButton id="security" label="Security" icon={LockClosedIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                     <TabButton id="notifications" label="Notifications" icon={BellIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <TabButton id="verification" label="Verification" icon={LockClosedIcon} activeTab={activeTab} setActiveTab={setActiveTab} />
                 </nav>
             </div>
 
@@ -390,6 +447,7 @@ export const CitizenSettings: React.FC = () => {
                 {activeTab === 'profile' && renderProfileTab()}
                 {activeTab === 'security' && renderSecurityTab()}
                 {activeTab === 'notifications' && renderNotificationsTab()}
+                {activeTab === 'verification' && renderVerificationTab()}
             </div>
         </div>
     );

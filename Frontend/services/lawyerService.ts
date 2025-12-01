@@ -26,6 +26,7 @@ interface LawyerProfileApi {
   license_issue_date?: string;
   specializations?: string[];
   experience_years?: number | null;
+  availability?: Record<string, string[]>;
 }
 
 interface LegalSpecializationApi {
@@ -81,6 +82,7 @@ const mapLawyerProfileToUser = (profile: LawyerProfileApi): User => {
 
   return {
     id: profile.user_id || profile.profile_id,
+    profileId: profile.profile_id, // Add LawyerProfile ID for appointments
     name: normalizedName,
     email: profile.email,
     role: 'lawyer',
@@ -95,6 +97,7 @@ const mapLawyerProfileToUser = (profile: LawyerProfileApi): User => {
     location: profile.location || profile.chamber_address || undefined,
     fees: toNumber(consultationFee),
     lawyerId: profile.bar_council_number,
+    availability: profile.availability,
   };
 };
 

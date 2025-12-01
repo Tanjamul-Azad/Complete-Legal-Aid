@@ -290,6 +290,15 @@ class ConsultationBookingViewSet(viewsets.ModelViewSet):
 
         return queryset.distinct()
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("Booking Serializer Errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
         citizen = serializer.validated_data.get('citizen')
         if citizen is None:
@@ -315,6 +324,21 @@ class NotificationViewSet(viewsets.ModelViewSet):
 class ChatMessageViewSet(viewsets.ModelViewSet):
     queryset = ChatMessage.objects.all()
     serializer_class = ChatMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return ChatMessage.objects.all()
+        return ChatMessage.objects.filter(
+            Q(sender=user) | 
+            Q(receiver=user) |
+            Q(case__citizen=user) | 
+            Q(case__assigned_lawyer__user=user)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        serializer.save(sender=self.request.user)
 
 class LawyerReviewViewSet(viewsets.ModelViewSet):
     queryset = LawyerReview.objects.all()

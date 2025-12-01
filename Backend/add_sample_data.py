@@ -16,8 +16,11 @@ django.setup()
 from django.contrib.auth import get_user_model
 from api.models import (
     CitizenProfile, LawyerProfile, LegalSpecialization, 
-    LawyerSpecializationMap
+    LawyerSpecializationMap, LawyerAvailabilitySlot, Case,
+    ChatMessage, ConsultationBooking
 )
+from django.utils import timezone
+import random
 
 User = get_user_model()
 
@@ -325,6 +328,141 @@ def create_sample_lawyers(specializations):
         print("✓ Lawyers already exist")
 
 
+def create_lawyer_availability():
+    """Create availability slots for lawyers"""
+    lawyers = LawyerProfile.objects.all()
+    count = 0
+    
+    for lawyer in lawyers:
+        # Check if slots exist
+        if LawyerAvailabilitySlot.objects.filter(lawyer=lawyer).exists():
+            continue
+            
+        # Create slots for Mon-Fri (0-4), 9 AM - 5 PM
+        for day in range(5): # 0=Mon, 4=Fri
+            # Morning slot: 9:00 - 13:00
+            LawyerAvailabilitySlot.objects.create(
+                lawyer=lawyer,
+                day_of_week=day,
+                start_time=timezone.datetime.strptime('09:00', '%H:%M').time(),
+                end_time=timezone.datetime.strptime('13:00', '%H:%M').time(),
+                booking_type='BOTH'
+            )
+            
+            # Afternoon slot: 14:00 - 17:00
+            LawyerAvailabilitySlot.objects.create(
+                lawyer=lawyer,
+                day_of_week=day,
+                start_time=timezone.datetime.strptime('14:00', '%H:%M').time(),
+                end_time=timezone.datetime.strptime('17:00', '%H:%M').time(),
+                booking_type='BOTH'
+            )
+        count += 1
+        
+    if count > 0:
+        print(f"✓ Added availability slots for {count} lawyers")
+    else:
+        print("✓ Availability slots already exist")
+
+
+def create_sample_cases():
+    """Create sample cases"""
+    citizens = User.objects.filter(role='CITIZEN')
+    lawyers = LawyerProfile.objects.all()
+    
+    if not citizens.exists() or not lawyers.exists():
+        return
+        
+    cases_data = [
+        {
+            'title': 'Land Dispute in Village',
+            'description': 'Dispute regarding ancestral property boundaries in Comilla.',
+            'category': 'property-law',
+            'status': 'IN_REVIEW',
+            'priority': 'HIGH'
+        },
+        {
+            'title': 'Divorce Settlement',
+            'description': 'Seeking legal assistance for divorce proceedings and alimony.',
+            'category': 'family-law',
+            'status': 'SUBMITTED',
+            'priority': 'MEDIUM'
+        },
+        {
+            'title': 'Unfair Dismissal',
+            'description': 'Wrongful termination from garment factory without notice pay.',
+            'category': 'labor-law',
+            'status': 'SCHEDULED',
+            'priority': 'HIGH'
+        }
+    ]
+    
+    count = 0
+    for i, data in enumerate(cases_data):
+        citizen = citizens[i % len(citizens)]
+        lawyer = lawyers[i % len(lawyers)]
+        category = LegalSpecialization.objects.filter(slug=data['category']).first()
+        
+        if not Case.objects.filter(title=data['title']).exists():
+            Case.objects.create(
+                citizen=citizen,
+                assigned_lawyer=lawyer,
+                category=category,
+                title=data['title'],
+                description=data['description'],
+                status=data['status'],
+                priority=data['priority'],
+                case_number=f"CASE-{2024}-{1000+i}",
+                court_name="Dhaka District Court"
+            )
+            count += 1
+            
+    if count > 0:
+        print(f"✓ Created {count} sample cases")
+    else:
+        print("✓ Sample cases already exist")
+
+
+def create_sample_messages():
+    """Create sample messages"""
+    # Find a case
+    case = Case.objects.first()
+    if not case:
+        return
+        
+    citizen = case.citizen
+    lawyer = case.assigned_lawyer.user
+    
+    if not ChatMessage.objects.filter(case=case).exists():
+        # Citizen message
+        ChatMessage.objects.create(
+            case=case,
+            sender=citizen,
+            message_text="Hello Advocate, I have uploaded the documents.",
+            sent_at=timezone.now() - timedelta(days=1)
+        )
+        
+        # Lawyer reply
+        ChatMessage.objects.create(
+            case=case,
+            sender=lawyer,
+            message_text="Thank you. I will review them and get back to you.",
+            sent_at=timezone.now() - timedelta(hours=20)
+        )
+        
+        # Direct message (no case)
+        ChatMessage.objects.create(
+            case=None,
+            sender=citizen,
+            message_text="Hi, are you available for a consultation?",
+            sent_at=timezone.now() - timedelta(hours=2)
+        )
+        
+        print("✓ Created sample messages")
+    else:
+        print("✓ Sample messages already exist")
+
+
 def main():
     print("\n" + "="*60)
     print("Adding Bengali Sample Data to Complete Legal Aid")
@@ -337,7 +475,17 @@ def main():
     create_sample_citizens()
     
     # Create sample lawyers
+    # Create sample lawyers
     create_sample_lawyers(specializations)
+    
+    # Create availability
+    create_lawyer_availability()
+    
+    # Create cases
+    create_sample_cases()
+    
+    # Create messages
+    create_sample_messages()
     
     print("\n" + "="*60)
     print("✓ Sample data added successfully!")
