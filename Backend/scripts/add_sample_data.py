@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 # Setup Django
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cla_backend.settings')
 django.setup()
 

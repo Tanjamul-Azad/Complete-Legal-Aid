@@ -1,5 +1,8 @@
 import os
+import sys
 import django
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import datetime
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cla_backend.settings')
