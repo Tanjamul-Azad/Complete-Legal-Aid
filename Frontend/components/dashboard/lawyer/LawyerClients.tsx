@@ -6,24 +6,48 @@ import { UserGroupIcon, PhoneIcon, MailIcon, BriefcaseIcon, SearchIcon } from '.
 export const LawyerClients: React.FC = () => {
     const context = useContext(AppContext);
     if (!context) return null;
-    const { user, cases, users: allUsers, setDashboardSubPage, setSelectedCaseId } = context;
+    const { user, cases, appointments, users: allUsers, setDashboardSubPage, setSelectedCaseId } = context;
 
     const clients = useMemo(() => {
         if (!user) return [];
+
         // Get all cases for this lawyer
         const myCases = cases.filter(c => c.lawyerId === user.id);
-        // Extract unique client IDs
-        const clientIds = [...new Set(myCases.map(c => c.clientId))];
-        
-        return clientIds.map(clientId => {
-            const clientUser = allUsers.find(u => u.id === clientId);
+        // Get all appointments for this lawyer
+        const myAppointments = appointments.filter(a => a.lawyerId === user.id);
+
+        // Extract unique client IDs from both sources
+        const caseClientIds = myCases.map(c => c.clientId);
+        const appointmentClientIds = myAppointments.map(a => a.clientId);
+        const uniqueClientIds = [...new Set([...caseClientIds, ...appointmentClientIds])];
+
+        return uniqueClientIds.map(clientId => {
+            // Try to find user in cases or appointments if not in allUsers (which is empty for non-admins)
+            let clientUser = allUsers.find(u => u.id === clientId);
+
+            if (!clientUser) {
+                // Fallback to enriched data from appointments
+                const appointment = myAppointments.find(a => a.clientId === clientId);
+                if (appointment && appointment.clientName) {
+                    clientUser = {
+                        id: clientId,
+                        name: appointment.clientName,
+                        email: appointment.clientEmail || 'No Email',
+                        avatar: appointment.clientAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(appointment.clientName)}`,
+                        role: 'citizen',
+                        verificationStatus: 'Verified'
+                    } as any; // Cast to any to avoid strict User type checks for missing optional fields
+                }
+            }
+
             const clientCases = myCases.filter(c => c.clientId === clientId);
+
             return {
                 user: clientUser,
                 cases: clientCases
             };
         }).filter(item => item.user); // Filter out undefined users
-    }, [user, cases, allUsers]);
+    }, [user, cases, appointments, allUsers]);
 
     if (!user) return null;
 
@@ -38,9 +62,9 @@ export const LawyerClients: React.FC = () => {
                 </div>
                 <div className="relative w-full md:w-64">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input 
-                        type="text" 
-                        placeholder="Search clients..." 
+                    <input
+                        type="text"
+                        placeholder="Search clients..."
                         className="w-full pl-9 pr-4 py-2 bg-white dark:bg-cla-surface-dark border border-cla-border dark:border-cla-border-dark rounded-lg text-sm focus:ring-2 focus:ring-cla-gold focus:border-transparent shadow-sm"
                     />
                 </div>
@@ -62,7 +86,7 @@ export const LawyerClients: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-3 mb-6 text-sm bg-gray-50 dark:bg-white/5 p-3 rounded-lg border border-gray-100 dark:border-white/5">
                                 <div className="flex items-center gap-2 text-cla-text-muted dark:text-cla-text-muted-dark truncate">
                                     <MailIcon className="w-4 h-4 text-gray-400" /> {client!.email}
@@ -76,8 +100,8 @@ export const LawyerClients: React.FC = () => {
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Active Cases ({activeCases.length})</p>
                                 <div className="space-y-2">
                                     {activeCases.map(c => (
-                                        <button 
-                                            key={c.id} 
+                                        <button
+                                            key={c.id}
                                             onClick={() => { setSelectedCaseId(c.id); setDashboardSubPage('cases'); }}
                                             className="w-full text-left text-sm p-2.5 rounded-lg bg-white dark:bg-black/20 border border-cla-border dark:border-white/5 hover:border-cla-gold dark:hover:border-cla-gold/50 transition-colors flex items-center justify-between group shadow-sm"
                                         >

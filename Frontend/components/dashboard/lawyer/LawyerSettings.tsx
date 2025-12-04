@@ -5,6 +5,7 @@ import { AppContext } from '../../../context/AppContext';
 import { FormInput, PasswordInput } from '../../ui/FormInputs';
 import { UserCircleIcon, LockClosedIcon, BellIcon, BriefcaseIcon, ClockIcon } from '../../icons';
 import { PasswordStrengthMeter } from '../../ui/PasswordStrengthMeter';
+import { lawyerService } from '../../../services/lawyerService';
 
 const TabButton: React.FC<{ id: string; label: string; icon: React.ElementType; activeTab: string; setActiveTab: (id: string) => void; }> = ({ id, label, icon: Icon, activeTab, setActiveTab }) => (
     <button
@@ -95,11 +96,18 @@ export const LawyerSettings: React.FC = () => {
     const handleScheduleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsScheduleSaving(true);
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const success = await lawyerService.updateSchedule(scheduleData);
+            if (success) {
+                context?.setToast({ message: "Availability schedule updated!", type: 'success' });
+            } else {
+                context?.setToast({ message: "Failed to update schedule.", type: 'error' });
+            }
+        } catch (error) {
+            context?.setToast({ message: "An error occurred.", type: 'error' });
+        } finally {
             setIsScheduleSaving(false);
-            context?.setToast({ message: "Availability schedule updated!", type: 'success' });
-        }, 1000);
+        }
     };
 
     useEffect(() => {

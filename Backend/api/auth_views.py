@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.utils import timezone
 
-from .models import User, CitizenProfile, LawyerProfile, AdminProfile
+from .models import User, CitizenProfile, LawyerProfile, AdminProfile, LegalSpecialization, LawyerSpecializationMap
 from .serializers import UserSerializer
 from .utils import save_uploaded_file
 
@@ -185,11 +185,17 @@ def login(request):
     # Serialize user data
     user_data = UserSerializer(user, context={'request': request}).data
     
-    return Response({
+    response_data = {
         'user': user_data,
         'access': str(refresh.access_token),
         'refresh': str(refresh),
-    })
+    }
+
+    # Add verification status for lawyers
+    if user.role == 'LAWYER' and hasattr(user, 'lawyer_profile'):
+        response_data['verification_status'] = user.lawyer_profile.verification_status
+
+    return Response(response_data)
 
 
 @api_view(['GET'])
@@ -264,9 +270,44 @@ def update_profile(request):
         if hasattr(user, 'lawyer_profile') and user.role == 'LAWYER':
             if 'bio' in data:
                 user.lawyer_profile.bio_en = data['bio']
+            if 'location' in data:
+                user.lawyer_profile.chamber_address = data['location']
+            if 'fees' in data:
+                try:
+                    user.lawyer_profile.consultation_fee_online = float(data['fees'])
+                except (ValueError, TypeError):
+                    pass
+            if 'experience' in data:
+                try:
+                    years = int(data['experience'])
+                    from django.utils import timezone
+                    today = timezone.now().date()
+                    # Approximate license date based on years of experience
+                    issue_date = today.replace(year=today.year - years)
+                    user.lawyer_profile.license_issue_date = issue_date
+                except (ValueError, TypeError):
+                    pass
+            
             if 'specializations' in data:
-                # Handle specializations update if needed
-                pass
+                specs_str = data['specializations']
+                if specs_str:
+                    spec_names = [s.strip() for s in specs_str.split(',') if s.strip()]
+                    # Clear existing mappings
+                    LawyerSpecializationMap.objects.filter(lawyer=user.lawyer_profile).delete()
+                    
+                    for name in spec_names:
+                        # Find or create specialization
+                        # Note: In a real app, we might want to restrict to existing ones or handle creation carefully
+                        # For now, we'll try to find case-insensitive match or create
+                        spec = LegalSpecialization.objects.filter(name_en__iexact=name).first()
+                        if not spec:
+                            spec = LegalSpecialization.objects.create(name_en=name, name_bn=name) # Fallback BN name
+                        
+                        LawyerSpecializationMap.objects.create(
+                            lawyer=user.lawyer_profile,
+                            specialization=spec
+                        )
+
             user.lawyer_profile.save()
         
         # Update citizen-specific fields

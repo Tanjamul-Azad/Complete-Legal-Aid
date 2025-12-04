@@ -85,7 +85,9 @@ const normalizeUser = (backendUser: any): User => {
     theme: backendUser.theme_preference || 'system',
     bio: profile.bio_en || backendUser.bio || undefined,
     specializations: profile.specializations || backendUser.specializations,
-    experience: profile.experience || backendUser.experience,
+    experience: profile.experience_years || backendUser.experience,
+    location: profile.chamber_address || backendUser.location,
+    fees: profile.consultation_fee_online || backendUser.fees,
     verificationDocFile: undefined,
     avatarFile: undefined,
   };
@@ -175,6 +177,13 @@ const buildProfileFormData = (data: Partial<User>): FormData => {
   append('phone_number', data.phone);
   append('preferred_language', data.language ? (data.language === 'Bangla' ? 'BN' : 'EN') : undefined);
   append('bio', data.bio);
+  append('location', data.location);
+  append('fees', data.fees);
+  append('experience', data.experience);
+
+  if (data.specializations && data.specializations.length > 0) {
+    append('specializations', data.specializations.join(','));
+  }
 
   if (data.avatarFile) {
     formData.append('avatar', data.avatarFile);

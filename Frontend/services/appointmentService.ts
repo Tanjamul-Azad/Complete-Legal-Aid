@@ -35,7 +35,7 @@ const normalizeAppointment = (payload: any): Appointment => {
   return {
     id: payload.booking_id || payload.id,
     clientId: payload.citizen,
-    lawyerId: payload.lawyer,
+    lawyerId: payload.lawyer_user_id || payload.lawyer, // Use user ID if available, fallback to profile ID
     title: payload.title || 'Consultation',
     type: 'Consultation',
     date: start ? start.slice(0, 10) : new Date().toISOString().slice(0, 10),
@@ -46,6 +46,14 @@ const normalizeAppointment = (payload: any): Appointment => {
     reviewed: payload.reviewed ?? false,
     notes: payload.notes || payload.location,
     caseId: payload.case,
+
+    // Map enriched fields
+    clientName: payload.citizen_name,
+    clientEmail: payload.citizen_email, // Need to ensure backend sends this
+    clientAvatar: payload.citizen_avatar, // Need to ensure backend sends this
+    lawyerName: payload.lawyer_name,
+    lawyerAvatar: payload.lawyer_avatar, // Need to ensure backend sends this
+    lawyerSpecialization: payload.lawyer_specialization, // Need to ensure backend sends this
   };
 };
 

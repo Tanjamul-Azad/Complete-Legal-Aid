@@ -42,10 +42,9 @@ const PageRenderer = () => {
         if (user.verificationStatus === 'PendingEmailVerification') {
             return <EmailVerificationPage status="prompt" setCurrentPage={handleSetCurrentPage} />;
         }
-        // Pending verification check removed to allow unverified access
-        // if (user.verificationStatus === 'Pending') {
-        //    return <PendingVerificationPage user={user} logout={handleLogout} />;
-        // }
+        if (user.verificationStatus === 'Pending') {
+            return <PendingVerificationPage user={user} logout={handleLogout} />;
+        }
     }
 
     switch (currentPage) {

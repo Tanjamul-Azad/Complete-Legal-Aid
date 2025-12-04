@@ -187,9 +187,20 @@ const addLawyerReview = async (lawyerId: string, review: LawyerReview): Promise<
   }
 };
 
+const updateSchedule = async (schedule: Record<string, { active: boolean; start: string; end: string }>): Promise<boolean> => {
+  try {
+    await apiClient.post('/lawyer-profiles/update-schedule/', { schedule });
+    return true;
+  } catch (error) {
+    console.error('Update schedule error:', error);
+    return false;
+  }
+};
+
 export const lawyerService = {
   getAllLawyers,
   getLawyerById,
   getLegalSpecializations,
   addLawyerReview,
+  updateSchedule,
 };

@@ -61,6 +61,15 @@ class UserSerializer(serializers.ModelSerializer):
         if not profile:
             return None
 
+        # Use specific serializers to ensure all fields are returned
+        if hasattr(obj, 'lawyer_profile'):
+            return LawyerProfileSerializer(profile, context=self.context).data
+        elif hasattr(obj, 'citizen_profile'):
+            return CitizenProfileSerializer(profile, context=self.context).data
+        elif hasattr(obj, 'admin_profile'):
+            return AdminProfileSerializer(profile, context=self.context).data
+
+        # Fallback for any other profile types
         data = {}
         if hasattr(profile, 'full_name_en'):
             data['full_name_en'] = profile.full_name_en
@@ -270,9 +279,37 @@ class LawyerAvailabilitySlotSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ConsultationBookingSerializer(serializers.ModelSerializer):
+    lawyer_user_id = serializers.UUIDField(source='lawyer.user.user_id', read_only=True)
+    citizen_name = serializers.CharField(source='citizen.citizen_profile.full_name_en', read_only=True)
+    citizen_email = serializers.EmailField(source='citizen.email', read_only=True)
+    citizen_avatar = serializers.SerializerMethodField()
+    
+    lawyer_name = serializers.CharField(source='lawyer.full_name_en', read_only=True)
+    lawyer_avatar = serializers.SerializerMethodField()
+    lawyer_specialization = serializers.SerializerMethodField()
+
     class Meta:
         model = ConsultationBooking
         fields = '__all__'
+
+    def get_citizen_avatar(self, obj):
+        request = self.context.get('request')
+        if obj.citizen.citizen_profile.profile_photo_url:
+            return build_public_url(obj.citizen.citizen_profile.profile_photo_url, request)
+        return None
+
+    def get_lawyer_avatar(self, obj):
+        request = self.context.get('request')
+        if obj.lawyer.profile_photo_url:
+            return build_public_url(obj.lawyer.profile_photo_url, request)
+        return None
+
+    def get_lawyer_specialization(self, obj):
+        # Return first specialization or empty string
+        specs = obj.lawyer.lawyerspecializationmap_set.all()
+        if specs.exists():
+            return specs.first().specialization.name_en
+        return ""
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:

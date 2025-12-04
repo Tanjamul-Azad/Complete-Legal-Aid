@@ -152,6 +152,14 @@ export interface Appointment {
   reviewed?: boolean;
   notes?: string;
   caseId?: string;
+
+  // Enriched fields for display without full User object lookup
+  clientName?: string;
+  clientEmail?: string;
+  clientAvatar?: string;
+  lawyerName?: string;
+  lawyerAvatar?: string;
+  lawyerSpecialization?: string;
 }
 
 export interface Message {

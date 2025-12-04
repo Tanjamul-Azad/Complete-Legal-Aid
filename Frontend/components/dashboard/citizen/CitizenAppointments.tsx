@@ -21,9 +21,9 @@ const AppointmentCard: React.FC<{ appointment: Appointment, lawyer?: User, anima
 
     const [isConfirmCancelOpen, setConfirmCancelOpen] = useState(false);
     const isPast = new Date(appointment.date) < new Date();
-    const modeIcon = appointment.mode === 'Online' 
-        ? <GlobeAltIcon className="w-4 h-4" /> 
-        : <BuildingOfficeIcon className="w-4 h-4" strokeWidth={2}/>;
+    const modeIcon = appointment.mode === 'Online'
+        ? <GlobeAltIcon className="w-4 h-4" />
+        : <BuildingOfficeIcon className="w-4 h-4" strokeWidth={2} />;
 
     const handleConfirmCancel = () => {
         handleUpdateAppointment(appointment.id, { status: 'Cancelled' });
@@ -31,7 +31,7 @@ const AppointmentCard: React.FC<{ appointment: Appointment, lawyer?: User, anima
     };
 
     return (
-        <div 
+        <div
             onClick={onCardClick}
             className="group cursor-pointer bg-white dark:bg-[#111111] rounded-2xl shadow-lg shadow-gray-500/5 dark:shadow-black/20 border border-cla-border dark:border-white/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-cla-gold/50 dark:hover:border-cla-gold/30 active:scale-[0.98] animate-fade-in-up"
             style={{ animationDelay }}
@@ -49,7 +49,7 @@ const AppointmentCard: React.FC<{ appointment: Appointment, lawyer?: User, anima
                         {appointment.status}
                     </span>
                 </div>
-                
+
                 <div className="mt-4 pt-4 border-t border-cla-border dark:border-white/10 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-cla-text-muted dark:text-cla-text-muted-dark">
                         <div className="flex items-center gap-1.5"><CalendarIcon className="w-4 h-4" /> <span className="font-medium text-cla-text dark:text-cla-text-dark">{new Date(appointment.date).toDateString()}</span></div>
@@ -63,7 +63,7 @@ const AppointmentCard: React.FC<{ appointment: Appointment, lawyer?: User, anima
                                 onClick={() => setReviewTarget({ lawyerId: lawyer.id, source: { type: 'appointment', id: appointment.id } })}
                                 className="px-3 py-1.5 text-xs font-semibold rounded-lg text-cla-gold bg-cla-gold/10 hover:bg-cla-gold/20 transition-colors flex items-center gap-1.5"
                             >
-                                <StarIcon className="w-4 h-4"/> Rate Experience
+                                <StarIcon className="w-4 h-4" /> Rate Experience
                             </button>
                         )}
                         {!isPast && appointment.status !== 'Cancelled' && (
@@ -99,11 +99,11 @@ export const CitizenAppointments: React.FC = () => {
 
     const userAppointments = useMemo(() => {
         if (!user) return { upcoming: [], past: [] };
-        
+
         const sorted = appointments
             .filter(a => a.clientId === user.id)
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        
+
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
@@ -118,8 +118,8 @@ export const CitizenAppointments: React.FC = () => {
     if (!user) return null;
 
     const TabButton: React.FC<{ tabId: 'upcoming' | 'past', count: number, children: React.ReactNode }> = ({ tabId, count, children }) => (
-        <button 
-            onClick={() => setActiveTab(tabId)} 
+        <button
+            onClick={() => setActiveTab(tabId)}
             className={`group relative whitespace-nowrap py-4 px-1 text-sm font-semibold transition-colors ${activeTab === tabId ? 'text-cla-gold' : 'text-cla-text-muted dark:text-cla-text-muted-dark hover:text-cla-text dark:hover:text-cla-text-dark'}`}
         >
             <div className="flex items-center gap-2">
@@ -143,12 +143,18 @@ export const CitizenAppointments: React.FC = () => {
                     <TabButton tabId="past" count={userAppointments.past.length}>Past</TabButton>
                 </nav>
             </div>
-            
+
             <div className="space-y-5">
                 {displayedAppointments.length > 0 ? (
                     displayedAppointments.map((appt, index) => {
-                        const lawyer = allUsers.find(u => u.id === appt.lawyerId);
-                        return <AppointmentCard key={appt.id} appointment={appt} lawyer={lawyer} animationDelay={`${index * 60}ms`} onCardClick={() => setSelectedAppointment(appt)}/>;
+                        // Use enriched data if available, fallback to allUsers lookup
+                        const lawyerUser = allUsers.find(u => u.id === appt.lawyerId);
+                        const lawyerDisplay = {
+                            name: appt.lawyerName || lawyerUser?.name,
+                            avatar: appt.lawyerAvatar || lawyerUser?.avatar,
+                            specializations: appt.lawyerSpecialization ? [appt.lawyerSpecialization] : lawyerUser?.specializations
+                        };
+                        return <AppointmentCard key={appt.id} appointment={appt} lawyer={lawyerDisplay as any} animationDelay={`${index * 60}ms`} onCardClick={() => setSelectedAppointment(appt)} />;
                     })
                 ) : (
                     <div className="text-center py-20 bg-cla-surface dark:bg-cla-surface-dark rounded-lg border-2 border-dashed border-cla-border dark:border-cla-border-dark animate-fade-in-up">
@@ -156,10 +162,10 @@ export const CitizenAppointments: React.FC = () => {
                         <h3 className="mt-4 text-xl font-semibold text-cla-text dark:text-cla-text-dark">No {activeTab} appointments</h3>
                         <p className="mt-1 text-cla-text-muted dark:text-cla-text-muted-dark">Find and book consultations with verified legal experts.</p>
                         <p className="mt-1 text-xs text-cla-text-muted dark:text-cla-text-muted-dark">Need help? Connect with verified lawyers.</p>
-                         <button 
-                            onClick={() => setDashboardSubPage('find-lawyers')} 
+                        <button
+                            onClick={() => setDashboardSubPage('find-lawyers')}
                             className="mt-6 flex items-center justify-center gap-2 mx-auto px-5 py-2.5 bg-cla-gold text-cla-text font-bold rounded-lg hover:bg-cla-gold-darker transition-all duration-300 transform hover:scale-105 active:scale-95"
-                         >
+                        >
                             <PlusCircleIcon className="w-5 h-5" />
                             Book an Appointment
                         </button>
@@ -167,7 +173,7 @@ export const CitizenAppointments: React.FC = () => {
                 )}
             </div>
             {selectedAppointment && (
-                <AppointmentDetailPanel 
+                <AppointmentDetailPanel
                     appointment={selectedAppointment}
                     onClose={() => setSelectedAppointment(null)}
                 />

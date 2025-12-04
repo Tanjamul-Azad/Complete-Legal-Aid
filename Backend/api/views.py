@@ -125,6 +125,49 @@ class LawyerProfileViewSet(viewsets.ModelViewSet):
 
         return base_queryset.distinct()
 
+    @action(detail=False, methods=['post'], url_path='update-schedule')
+    def update_schedule(self, request):
+        user = request.user
+        if not hasattr(user, 'lawyer_profile'):
+            return Response({'error': 'Only lawyers can update schedule'}, status=status.HTTP_403_FORBIDDEN)
+        
+        lawyer_profile = user.lawyer_profile
+        schedule_data = request.data.get('schedule', {})
+        
+        # Clear existing slots
+        LawyerAvailabilitySlot.objects.filter(lawyer=lawyer_profile).delete()
+        
+        new_slots = []
+        # Map day names to integers (0=Monday, 6=Sunday)
+        day_map = {
+            'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 
+            'Friday': 4, 'Saturday': 5, 'Sunday': 6
+        }
+        
+        for day_name, data in schedule_data.items():
+            if data.get('active') and day_name in day_map:
+                try:
+                    start_time = data.get('start')
+                    end_time = data.get('end')
+                    if start_time and end_time:
+                        new_slots.append(LawyerAvailabilitySlot(
+                            lawyer=lawyer_profile,
+                            day_of_week=day_map[day_name],
+                            start_time=start_time,
+                            end_time=end_time,
+                            booking_type='ONLINE', # Default to ONLINE for now
+                            is_active=True
+                        ))
+                except Exception as e:
+                    print(f"Error processing slot for {day_name}: {e}")
+                    
+        if new_slots:
+            LawyerAvailabilitySlot.objects.bulk_create(new_slots)
+            
+        # Return updated profile to refresh frontend
+        serializer = self.get_serializer(lawyer_profile)
+        return Response(serializer.data)
+
 class AdminProfileViewSet(viewsets.ModelViewSet):
     queryset = AdminProfile.objects.all()
     serializer_class = AdminProfileSerializer

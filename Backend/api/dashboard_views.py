@@ -21,6 +21,14 @@ class LawyerDashboardView(APIView):
         except LawyerProfile.DoesNotExist:
             return Response({'error': 'Lawyer profile not found.'}, status=404)
 
+        # Check verification status
+        if profile.verification_status != 'VERIFIED':
+            return Response({
+                'error': 'Account pending verification.',
+                'code': 'NOT_VERIFIED',
+                'status': profile.verification_status
+            }, status=403)
+
         # 1. Stats
         active_cases_count = Case.objects.filter(
             assigned_lawyer=profile,
